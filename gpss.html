@@ -43,6 +43,33 @@
     p {
       margin: 10px 0;
     }
+    .speed-container {
+      display: flex;
+      align-items: center;
+      margin: 15px 0;
+    }
+    .speed-btn {
+      width: 50px;
+      flex-shrink: 0;
+    }
+    .speed-display {
+      flex-grow: 1;
+      text-align: center;
+      font-size: 2em;
+      font-weight: bold;
+    }
+    .here-btn {
+      margin: 10px 0;
+    }
+    .saved-locations {
+      margin-top: 15px;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+    }
+    .location-item {
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
   </style>
 </head>
 <body>
@@ -54,10 +81,20 @@
       <input type="number" id="intervalInput" value="30" min="10" step="10" readonly>
       <button id="increaseInterval">+</button>
     </div>
-    <button id="startButton">開始</button>
-    <button id="stopButton" disabled>停止</button>
-    <p id="status">位置情報待ち...</p>
-    <p>最新の速度: <span id="speedDisplay">0</span> ノット</p>
+    <p id="status">位置情報取得中...</p>
+    
+    <div class="speed-container">
+      <button class="speed-btn" id="decreaseSpeed">-</button>
+      <div class="speed-display"><span id="speedDisplay">0</span> ノット</div>
+      <button class="speed-btn" id="increaseSpeed">+</button>
+    </div>
+    
+    <button id="hereButton" class="here-btn">ここ</button>
+    
+    <div class="saved-locations">
+      <h2>保存した地点</h2>
+      <div id="savedLocationsList"></div>
+    </div>
   </div>
   <script>
     let watchId;
@@ -65,14 +102,18 @@
     let lastAnnouncedPosition = null;
     let announceIntervalId;
     let intervalSeconds = 30;
+    let savedLocations = [];
+    const MAX_SAVED_LOCATIONS = 5;
 
     const statusElem = document.getElementById('status');
     const speedDisplayElem = document.getElementById('speedDisplay');
-    const startButton = document.getElementById('startButton');
-    const stopButton = document.getElementById('stopButton');
     const intervalInput = document.getElementById('intervalInput');
     const increaseIntervalButton = document.getElementById('increaseInterval');
     const decreaseIntervalButton = document.getElementById('decreaseInterval');
+    const increaseSpeedButton = document.getElementById('increaseSpeed');
+    const decreaseSpeedButton = document.getElementById('decreaseSpeed');
+    const hereButton = document.getElementById('hereButton');
+    const savedLocationsListElem = document.getElementById('savedLocationsList');
 
     // 日本語の音声を選択（利用可能な場合）
     let selectedVoice = null;
@@ -149,65 +190,112 @@
       if (newInterval >= 10) {
         intervalInput.value = newInterval;
         intervalSeconds = newInterval;
+        
+        // インターバルが変更されたら、タイマーを再設定
+        if (announceIntervalId) {
+          clearInterval(announceIntervalId);
+          announceIntervalId = setInterval(announceCurrentSpeed, intervalSeconds * 1000);
+        }
       }
     }
 
+    // 現在地を保存する
+    function saveCurrentLocation() {
+      if (!currentPosition) return;
+      
+      const location = {
+        latitude: currentPosition.coords.latitude,
+        longitude: currentPosition.coords.longitude,
+        timestamp: new Date().toLocaleTimeString(),
+        id: Date.now()
+      };
+      
+      // 最大5箇所まで保存（新しいものを先頭に追加）
+      savedLocations.unshift(location);
+      if (savedLocations.length > MAX_SAVED_LOCATIONS) {
+        savedLocations.pop();
+      }
+      
+      updateSavedLocationsList();
+    }
+    
+    // 保存地点リストを更新
+    function updateSavedLocationsList() {
+      savedLocationsListElem.innerHTML = '';
+      
+      savedLocations.forEach(loc => {
+        const distance = currentPosition ? 
+          haversineDistance(
+            currentPosition.coords.latitude, 
+            currentPosition.coords.longitude,
+            loc.latitude, 
+            loc.longitude
+          ) : 0;
+          
+        const item = document.createElement('div');
+        item.className = 'location-item';
+        item.innerHTML = `
+          <div>${loc.timestamp}</div>
+          <div>距離: ${Math.round(distance)} メートル</div>
+        `;
+        savedLocationsListElem.appendChild(item);
+      });
+    }
+
+    // 位置情報の更新時に呼ばれる関数
+    function handlePositionUpdate(pos) {
+      currentPosition = pos;
+      statusElem.textContent = "位置更新：" +
+                             "緯度: " + pos.coords.latitude.toFixed(5) + " " +
+                             "経度: " + pos.coords.longitude.toFixed(5);
+      
+      // 初回取得時にlastAnnouncedPositionを設定
+      if (!lastAnnouncedPosition) {
+        lastAnnouncedPosition = pos;
+        // 初回の速度計算と発話
+        announceCurrentSpeed();
+        // 定期的な発話を開始
+        announceIntervalId = setInterval(announceCurrentSpeed, intervalSeconds * 1000);
+      }
+      
+      // 保存地点があれば距離を更新
+      if (savedLocations.length > 0) {
+        updateSavedLocationsList();
+      }
+    }
+
+    // イベントリスナーの設定
     increaseIntervalButton.addEventListener('click', () => changeInterval(10));
     decreaseIntervalButton.addEventListener('click', () => changeInterval(-10));
+    hereButton.addEventListener('click', saveCurrentLocation);
+    
+    // 模擬的な速度調整（テスト用）
+    increaseSpeedButton.addEventListener('click', () => {
+      const currentSpeed = parseFloat(speedDisplayElem.textContent);
+      updateSpeedDisplay(Math.min(currentSpeed + 1.0, 999.9));
+    });
+    
+    decreaseSpeedButton.addEventListener('click', () => {
+      const currentSpeed = parseFloat(speedDisplayElem.textContent);
+      updateSpeedDisplay(Math.max(currentSpeed - 1.0, 0));
+    });
 
-    // 位置情報の取得と定期発表の開始
-    function startTracking() {
-      intervalSeconds = parseInt(intervalInput.value, 10);
-      if (isNaN(intervalSeconds) || intervalSeconds < 10) {
-        intervalSeconds = 30;
-        intervalInput.value = 30;
-      }
+    // アプリ起動時に自動で開始
+    function initialize() {
       statusElem.textContent = "位置情報取得中...";
+      
       // 高精度で位置情報を取得（watchPositionで継続的に更新）
       watchId = navigator.geolocation.watchPosition(
-        (pos) => {
-          currentPosition = pos;
-          statusElem.textContent = "位置更新：\n" +
-                                 "緯度: " + pos.coords.latitude.toFixed(5) + "\n" +
-                                 "経度: " + pos.coords.longitude.toFixed(5);
-          // 初回取得時にlastAnnouncedPositionを設定
-          if (!lastAnnouncedPosition) {
-            lastAnnouncedPosition = pos;
-          }
-        },
+        handlePositionUpdate,
         (err) => {
           statusElem.textContent = "エラー: " + err.message;
         },
         { enableHighAccuracy: true }
       );
-      
-      // 初回発言してから、設定間隔で発言
-      announceCurrentSpeed();
-      announceIntervalId = setInterval(announceCurrentSpeed, intervalSeconds * 1000);
-      
-      startButton.disabled = true;
-      stopButton.disabled = false;
-      intervalInput.disabled = true;
     }
 
-    // 追跡と発表を停止
-    function stopTracking() {
-      if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
-      }
-      if (announceIntervalId) {
-        clearInterval(announceIntervalId);
-      }
-      statusElem.textContent = "追跡停止";
-      startButton.disabled = false;
-      stopButton.disabled = true;
-      intervalInput.disabled = false;
-      lastAnnouncedPosition = null;
-      currentPosition = null;
-    }
-
-    startButton.addEventListener('click', startTracking);
-    stopButton.addEventListener('click', stopTracking);
+    // ページ読み込み時に初期化
+    window.addEventListener('load', initialize);
   </script>
 </body>
 </html>
