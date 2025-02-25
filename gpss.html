@@ -19,6 +19,8 @@
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      box-sizing: border-box;
     }
     h1 {
       text-align: center;
@@ -49,8 +51,10 @@
       margin: 15px 0;
     }
     .speed-btn {
-      width: 50px;
+      width: 100%;
       flex-shrink: 0;
+      background: #ffcc00;
+      color: #333;
     }
     .speed-display {
       flex-grow: 1;
@@ -58,8 +62,32 @@
       font-size: 2em;
       font-weight: bold;
     }
+    .interval-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 15px 0;
+    }
+    .speed-btn {
+      width: 30%;
+      flex-shrink: 0;
+      color: #333;
+    }
+    #decreaseInterval {
+      background: #ffcc00; /* - ボタンを黄色に */
+    }
+    #increaseInterval {
+      background: #00bfff; /* + ボタンを水色に */
+    }
+    .interval-display {
+      flex-grow: 1;
+      text-align: center;
+      font-size: 2em;
+      font-weight: bold;
+    }
     .here-btn {
       margin: 10px 0;
+      background: #ff3b30;
     }
     .saved-locations {
       margin-top: 15px;
@@ -75,18 +103,16 @@
 <body>
   <div class="container">
     <h1>GPS速度発表アプリ</h1>
-    <label for="intervalInput">発表間隔（秒、10秒刻み）:</label>
-    <div>
-      <button id="decreaseInterval">-</button>
-      <input type="number" id="intervalInput" value="30" min="10" step="10" readonly>
-      <button id="increaseInterval">+</button>
+    <label for="intervalDisplay">発表間隔（秒、10秒刻み）:</label>
+    <div class="interval-container">
+      <button class="speed-btn" id="decreaseInterval">-</button>
+      <div class="interval-display"><span id="intervalDisplay">30</span> 秒</div>
+      <button class="speed-btn" id="increaseInterval">+</button>
     </div>
     <p id="status">位置情報取得中...</p>
     
     <div class="speed-container">
-      <button class="speed-btn" id="decreaseSpeed">-</button>
       <div class="speed-display"><span id="speedDisplay">0</span> ノット</div>
-      <button class="speed-btn" id="increaseSpeed">+</button>
     </div>
     
     <button id="hereButton" class="here-btn">ここ</button>
@@ -107,11 +133,9 @@
 
     const statusElem = document.getElementById('status');
     const speedDisplayElem = document.getElementById('speedDisplay');
-    const intervalInput = document.getElementById('intervalInput');
+    const intervalDisplayElem = document.getElementById('intervalDisplay');
     const increaseIntervalButton = document.getElementById('increaseInterval');
     const decreaseIntervalButton = document.getElementById('decreaseInterval');
-    const increaseSpeedButton = document.getElementById('increaseSpeed');
-    const decreaseSpeedButton = document.getElementById('decreaseSpeed');
     const hereButton = document.getElementById('hereButton');
     const savedLocationsListElem = document.getElementById('savedLocationsList');
 
@@ -186,9 +210,9 @@
 
     // インターバルを増減する関数
     function changeInterval(amount) {
-      let newInterval = parseInt(intervalInput.value, 10) + amount;
+      let newInterval = parseInt(intervalDisplayElem.textContent, 10) + amount;
       if (newInterval >= 10) {
-        intervalInput.value = newInterval;
+        intervalDisplayElem.textContent = newInterval;
         intervalSeconds = newInterval;
         
         // インターバルが変更されたら、タイマーを再設定
@@ -234,10 +258,7 @@
           
         const item = document.createElement('div');
         item.className = 'location-item';
-        item.innerHTML = `
-          <div>${loc.timestamp}</div>
-          <div>距離: ${Math.round(distance)} メートル</div>
-        `;
+        item.innerHTML = `${loc.timestamp} - 距離: ${Math.round(distance)} メートル`;
         savedLocationsListElem.appendChild(item);
       });
     }
@@ -268,17 +289,6 @@
     increaseIntervalButton.addEventListener('click', () => changeInterval(10));
     decreaseIntervalButton.addEventListener('click', () => changeInterval(-10));
     hereButton.addEventListener('click', saveCurrentLocation);
-    
-    // 模擬的な速度調整（テスト用）
-    increaseSpeedButton.addEventListener('click', () => {
-      const currentSpeed = parseFloat(speedDisplayElem.textContent);
-      updateSpeedDisplay(Math.min(currentSpeed + 1.0, 999.9));
-    });
-    
-    decreaseSpeedButton.addEventListener('click', () => {
-      const currentSpeed = parseFloat(speedDisplayElem.textContent);
-      updateSpeedDisplay(Math.max(currentSpeed - 1.0, 0));
-    });
 
     // アプリ起動時に自動で開始
     function initialize() {
