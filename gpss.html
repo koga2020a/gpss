@@ -113,7 +113,10 @@
 
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
-      const speedText = "速度、" + speedKnots.toFixed(1);
+      // 速度が0または非常に小さい場合は「ゼロ」と発話
+      const speedText = speedKnots < 0.1 
+        ? "速度、ゼロ" 
+        : "速度、" + speedKnots.toFixed(1);
       const utterance = new SpeechSynthesisUtterance(speedText);
       if (selectedVoice) {
         utterance.voice = selectedVoice;
