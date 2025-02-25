@@ -206,13 +206,42 @@
       }
     }
 
+    // ローカルストレージから秒数を取得
+    function loadIntervalFromStorage() {
+      const savedInterval = localStorage.getItem('intervalSeconds');
+      if (savedInterval) {
+        intervalSeconds = parseInt(savedInterval, 10);
+        intervalDisplayElem.textContent = intervalSeconds;
+      }
+    }
+
+    // ローカルストレージに秒数を保存
+    function saveIntervalToStorage() {
+      localStorage.setItem('intervalSeconds', intervalSeconds);
+    }
+
+    // ローカルストレージから保存した地点を取得
+    function loadSavedLocationsFromStorage() {
+      const savedLocationsData = localStorage.getItem('savedLocations');
+      if (savedLocationsData) {
+        savedLocations = JSON.parse(savedLocationsData);
+        updateSavedLocationsList();
+      }
+    }
+
+    // ローカルストレージに保存した地点を保存
+    function saveLocationsToStorage() {
+      localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+    }
+
     // インターバルを増減する関数
     function changeInterval(amount) {
       let newInterval = parseInt(intervalDisplayElem.textContent, 10) + amount;
       if (newInterval >= 10) {
         intervalDisplayElem.textContent = newInterval;
         intervalSeconds = newInterval;
-        
+        saveIntervalToStorage(); // 変更後の秒数を保存
+
         // インターバルが変更されたら、タイマーを再設定
         if (announceIntervalId) {
           clearInterval(announceIntervalId);
@@ -239,6 +268,7 @@
       }
       
       updateSavedLocationsList();
+      saveLocationsToStorage(); // 保存後にローカルストレージに保存
     }
     
     // 保存地点リストを更新
@@ -299,6 +329,9 @@
     function initialize() {
       statusElem.textContent = "位置情報取得中...";
       
+      loadIntervalFromStorage(); // 秒数をロード
+      loadSavedLocationsFromStorage(); // 保存した地点をロード
+
       // 高精度で位置情報を取得（watchPositionで継続的に更新）
       watchId = navigator.geolocation.watchPosition(
         handlePositionUpdate,
