@@ -295,8 +295,8 @@
     function handlePositionUpdate(pos) {
       currentPosition = pos;
       statusElem.innerHTML = 
-                           "緯度: " + pos.coords.latitude.toFixed(5) + "<br>" +
-                           "経度: " + pos.coords.longitude.toFixed(5);
+                           "緯度: " + pos.coords.latitude.toFixed(5).padStart(9, '0') + "<br>" +
+                           "経度: " + pos.coords.longitude.toFixed(5).padStart(9, '0');
       
       // 初回取得時にlastAnnouncedPositionを設定
       if (!lastAnnouncedPosition) {
