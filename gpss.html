@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPS速度発表アプリ</title>
+  <style>
+    /* シンプルで使いやすいモバイル向けスタイル */
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.5em;
+    }
+    input, button {
+      font-size: 1.2em;
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background: #007aff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+    button:disabled {
+      background: #ccc;
+    }
+    p {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>GPS速度発表アプリ</h1>
+    <label for="intervalInput">発表間隔（秒、10秒刻み）:</label>
+    <input type="number" id="intervalInput" value="30" min="10" step="10">
+    <button id="startButton">開始</button>
+    <button id="stopButton" disabled>停止</button>
+    <p id="status">位置情報待ち...</p>
+    <p>最新の速度: <span id="speedDisplay">0</span> ノット</p>
+  </div>
+  <script>
+    let watchId;
+    let currentPosition = null;
+    let lastAnnouncedPosition = null;
+    let announceIntervalId;
+    let intervalSeconds = 30;
+
+    const statusElem = document.getElementById('status');
+    const speedDisplayElem = document.getElementById('speedDisplay');
+    const startButton = document.getElementById('startButton');
+    const stopButton = document.getElementById('stopButton');
+    const intervalInput = document.getElementById('intervalInput');
+
+    // 日本語の音声を選択（利用可能な場合）
+    let selectedVoice = null;
+    function setVoice() {
+      const voices = speechSynthesis.getVoices();
+      selectedVoice = voices.find(voice => voice.lang.startsWith('ja')) || null;
+    }
+    window.speechSynthesis.onvoiceschanged = setVoice;
+    setVoice();
+
+    // 2点間の距離（メートル）をhaversineの公式で算出
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371000; // 地球の半径（メートル）
+      const toRad = Math.PI / 180;
+      const dLat = (lat2 - lat1) * toRad;
+      const dLon = (lon2 - lon1) * toRad;
+      const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) *
+                Math.sin(dLon / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    // 2点間の平均速度（m/s）を計算
+    function calculateSpeed(lastPos, currentPos) {
+      const distance = haversineDistance(
+        lastPos.coords.latitude, lastPos.coords.longitude,
+        currentPos.coords.latitude, currentPos.coords.longitude
+      );
+      const timeDiff = (currentPos.timestamp - lastPos.timestamp) / 1000; // 秒
+      return timeDiff > 0 ? distance / timeDiff : 0;
+    }
+
+    // m/sからノットへの変換（1 m/s ≒ 1.94384 knot）
+    function convertToKnots(mps) {
+      return mps * 1.94384;
+    }
+
+    // 指定された速度（ノット）を発話する
+    function speakSpeed(speedKnots) {
+      const speedText = "速度、" + speedKnots.toFixed(1);
+      const utterance = new SpeechSynthesisUtterance(speedText);
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+      speechSynthesis.speak(utterance);
+    }
+
+    // 画面上に速度を表示する
+    function updateSpeedDisplay(speedKnots) {
+      speedDisplayElem.textContent = speedKnots.toFixed(1);
+    }
+
+    // 発表タイミングで、前回の位置からの平均速度を算出して発言
+    function announceCurrentSpeed() {
+      if (currentPosition && lastAnnouncedPosition) {
+        const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+        const speedKnots = convertToKnots(speedMps);
+        speakSpeed(speedKnots);
+        updateSpeedDisplay(speedKnots);
+      }
+      // 次回の計算用に現在の位置を記録
+      if (currentPosition) {
+        lastAnnouncedPosition = currentPosition;
+      }
+    }
+
+    // 位置情報の取得と定期発表の開始
+    function startTracking() {
+      intervalSeconds = parseInt(intervalInput.value, 10);
+      if (isNaN(intervalSeconds) || intervalSeconds < 10) {
+        intervalSeconds = 30;
+        intervalInput.value = 30;
+      }
+      statusElem.textContent = "位置情報取得中...";
+      // 高精度で位置情報を取得（watchPositionで継続的に更新）
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          currentPosition = pos;
+          statusElem.textContent = "位置更新：緯度 " + pos.coords.latitude.toFixed(5) +
+                                   ", 経度 " + pos.coords.longitude.toFixed(5);
+          // 初回取得時にlastAnnouncedPositionを設定
+          if (!lastAnnouncedPosition) {
+            lastAnnouncedPosition = pos;
+          }
+        },
+        (err) => {
+          statusElem.textContent = "エラー: " + err.message;
+        },
+        { enableHighAccuracy: true }
+      );
+      
+      // 初回発言してから、設定間隔で発言
+      announceCurrentSpeed();
+      announceIntervalId = setInterval(announceCurrentSpeed, intervalSeconds * 1000);
+      
+      startButton.disabled = true;
+      stopButton.disabled = false;
+      intervalInput.disabled = true;
+    }
+
+    // 追跡と発表を停止
+    function stopTracking() {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      if (announceIntervalId) {
+        clearInterval(announceIntervalId);
+      }
+      statusElem.textContent = "追跡停止";
+      startButton.disabled = false;
+      stopButton.disabled = true;
+      intervalInput.disabled = false;
+      lastAnnouncedPosition = null;
+      currentPosition = null;
+    }
+
+    startButton.addEventListener('click', startTracking);
+    stopButton.addEventListener('click', stopTracking);
+  </script>
+</body>
+</html>
