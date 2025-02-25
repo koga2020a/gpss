@@ -128,6 +128,9 @@
     let intervalSeconds = 30;
     let savedLocations = [];
     const MAX_SAVED_LOCATIONS = 5;
+    // 速度値の履歴を保存する配列
+    let speedHistory = [];
+    const MAX_SPEED_HISTORY = 5; // 移動平均のサンプル数
 
     const statusElem = document.getElementById('status');
     const speedDisplayElem = document.getElementById('speedDisplay');
@@ -174,6 +177,21 @@
       return mps * 1.94384;
     }
 
+    // 速度の移動平均を計算する関数
+    function getSmoothedSpeed(newSpeed) {
+      // 新しい速度を履歴に追加
+      speedHistory.unshift(newSpeed);
+      
+      // 履歴が最大数を超えたら古いデータを削除
+      if (speedHistory.length > MAX_SPEED_HISTORY) {
+        speedHistory.pop();
+      }
+      
+      // 履歴の平均値を計算
+      const sum = speedHistory.reduce((acc, speed) => acc + speed, 0);
+      return sum / speedHistory.length;
+    }
+
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
       // 速度が0または非常に小さい場合は「ゼロ」と発話
@@ -189,7 +207,9 @@
 
     // 画面上に速度を表示する
     function updateSpeedDisplay(speedKnots) {
-      speedDisplayElem.textContent = speedKnots.toFixed(1);
+      // 速度をスムージングして表示
+      const smoothedSpeed = getSmoothedSpeed(speedKnots);
+      speedDisplayElem.textContent = smoothedSpeed.toFixed(1);
     }
 
     // 発表タイミングで、前回の位置からの平均速度を算出して発言
@@ -197,8 +217,10 @@
       if (currentPosition && lastAnnouncedPosition) {
         const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
         const speedKnots = convertToKnots(speedMps);
-        speakSpeed(speedKnots);
-        updateSpeedDisplay(speedKnots);
+        // スムージングされた速度を発話
+        const smoothedSpeed = getSmoothedSpeed(speedKnots);
+        speakSpeed(smoothedSpeed);
+        updateSpeedDisplay(speedKnots); // この関数内でスムージングが適用される
       }
       // 次回の計算用に現在の位置を記録
       if (currentPosition) {
