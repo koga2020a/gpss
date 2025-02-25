@@ -294,7 +294,7 @@
     // 位置情報の更新時に呼ばれる関数
     function handlePositionUpdate(pos) {
       currentPosition = pos;
-      statusElem.innerHTML = "位置更新：<br>" +
+      statusElem.innerHTML = 
                            "緯度: " + pos.coords.latitude.toFixed(5) + "<br>" +
                            "経度: " + pos.coords.longitude.toFixed(5);
       
