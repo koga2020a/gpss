@@ -222,6 +222,8 @@
       }
     }
 
+    let isAudioInitialized = false;
+
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
       // 速度が0または非常に小さい場合は「ゼロ」と発話
@@ -229,7 +231,6 @@
         ? "速度、ゼロ" 
         : "速度、" + speedKnots.toFixed(1);
       
-      // ユーザー操作をトリガーにして音声を再生
       const utterance = new SpeechSynthesisUtterance(speedText);
       utterance.lang = 'ja-JP';
       utterance.rate = 1.0;
@@ -239,11 +240,29 @@
         utterance.voice = selectedVoice;
       }
       
-      // ボタンをクリックしたときに音声を再生
-      document.getElementById('hereButton').addEventListener('click', () => {
-        window.speechSynthesis.speak(utterance);
-      });
+      // 音声を再生
+      window.speechSynthesis.speak(utterance);
     }
+
+    // 初回のボタン押下で音声再生を許可
+    document.getElementById('hereButton').addEventListener('click', () => {
+      if (!isAudioInitialized) {
+        // 初回の音声再生を行い、フラグを設定
+        speakSpeed(0);
+        isAudioInitialized = true;
+        
+        // 定期的に音声を再生するタイマーを設定
+        announceIntervalId = setInterval(() => {
+          if (currentPosition && lastAnnouncedPosition) {
+            const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+            const speedKnots = convertToKnots(speedMps);
+            const smoothedSpeed = getSmoothedSpeed(speedKnots);
+            updateSpeedDisplay(smoothedSpeed);
+            speakSpeed(smoothedSpeed);
+          }
+        }, intervalSeconds * 1000);
+      }
+    });
 
     // 発表タイミングで、前回の位置からの平均速度を算出して発言
     function announceCurrentSpeed() {
