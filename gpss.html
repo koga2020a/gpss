@@ -212,7 +212,7 @@
       if (speedHistory.length > 0) {
         const currentAvg = speedHistory.reduce((acc, speed) => acc + speed, 0) / speedHistory.length;
         if (Math.abs(currentAvg - newSpeed) > 1.5) {
-          speedHistory = [];
+          speedHistory = [newSpeed];
         }
       }
       
