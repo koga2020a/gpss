@@ -154,10 +154,6 @@
     const MAX_SPEECH_LOG = 10;
     // 発話履歴の配列
     let speechHistory = [];
-    // 最後に発話した時刻
-    let lastSpeechTime = 0;
-    // 発話の最小間隔（ミリ秒）
-    const MIN_SPEECH_INTERVAL = 7000; // 7秒
 
     const statusElem = document.getElementById('status');
     const speedDisplayElem = document.getElementById('speedDisplay');
@@ -252,13 +248,6 @@
 
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
-      // 前回の発話から7秒経過していない場合は発話しない
-      const now = Date.now();
-      if (now - lastSpeechTime < MIN_SPEECH_INTERVAL) {
-        console.log("発話間隔が短すぎるため、発話をスキップします");
-        return;
-      }
-      
       // 速度が0または非常に小さい場合は「ゼロ」と発話
       const speedText = speedKnots < 0.1 
         ? "速度、ゼロ" 
@@ -275,9 +264,6 @@
       
       // 音声を再生
       window.speechSynthesis.speak(utterance);
-      
-      // 発話時刻を更新
-      lastSpeechTime = now;
       
       // 発話ログを記録
       logSpeech(speedText);
