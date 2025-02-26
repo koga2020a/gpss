@@ -120,7 +120,24 @@
       <div class="interval-display"><span id="intervalDisplay">30</span> 秒</div>
       <button class="speed-btn" id="increaseInterval">+</button>
     </div>
+  </style>
+  <!-- ResponsiveVoice.jsを追加 -->
+  <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_API_KEY"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="interval-container">
+      <button class="speed-btn" id="decreaseInterval">-</button>
+      <div class="interval-display"><span id="intervalDisplay">30</span> 秒</div>
+      <button class="speed-btn" id="increaseInterval">+</button>
+    </div>
     <p id="status">位置情報取得中...</p>
+    
+    <!-- デバッグ情報表示エリア -->
+    <div class="debug-container">
+      <h4>発話履歴</h4>
+      <div id="speechLog"></div>
+    </div>
     
     <div class="speed-container">
       <div class="speed-display"><span id="speedDisplay">0</span> ノット</div>
@@ -132,15 +149,20 @@
       <h4>保存した地点</h4>
       <div id="savedLocationsList"></div>
     </div>
-    
-    <!-- デバッグ情報表示エリア -->
-    <div class="debug-container">
-      <h4>発話履歴</h4>
-      <div id="speechLog"></div>
-    </div>
+    const MAX_SPEED_HISTORY = 5;
+    // 発話ログの最大保持数
+    const MAX_SPEECH_LOG = 10;
+    // 発話履歴の配列
+    let speechHistory = [];
+
+    const statusElem = document.getElementById('status');
+    const speedDisplayElem = document.getElementById('speedDisplay');
+    const intervalDisplayElem = document.getElementById('intervalDisplay');
+    const increaseIntervalButton = document.getElementById('increaseInterval');
   </div>
   <script>
     let watchId;
+    const speechLogElem = document.getElementById('speechLog'); // 発話ログの要素
     let currentPosition = null;
     let lastAnnouncedPosition = null;
     let announceIntervalId;
@@ -150,14 +172,14 @@
     // 速度値の履歴を保存する配列
     let speedHistory = [];
     const MAX_SPEED_HISTORY = 5;
-    // 発話ログの最大保持数
-    const MAX_SPEECH_LOG = 10;
-    // 発話履歴の配列
-    let speechHistory = [];
-    // 最後に発話した時刻（起動時から十分前の時間を設定して最初の発話を許可する）
-    let lastSpeechTime = Date.now() - 10000; // 起動時の10秒前に設定
-    // 発話の最小間隔（ミリ秒）
-    const MIN_SPEECH_INTERVAL = 7000; // 7秒
+
+    // 2点間の距離（メートル）をhaversineの公式で算出
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371000; // 地球の半径（メートル）
+      const toRad = Math.PI / 180;
+      const dLat = (lat2 - lat1) * toRad;
+      const dLon = (lon2 - lon1) * toRad;
+      const a = Math.sin(dLat / 2) ** 2 +
 
     const statusElem = document.getElementById('status');
     const speedDisplayElem = document.getElementById('speedDisplay');
@@ -166,7 +188,7 @@
     const decreaseIntervalButton = document.getElementById('decreaseInterval');
     const hereButton = document.getElementById('hereButton');
     const savedLocationsListElem = document.getElementById('savedLocationsList');
-    const speechLogElem = document.getElementById('speechLog'); // 発話ログの要素
+      const distance = haversineDistance(
 
     // 日本語の音声を選択（利用可能な場合）
     let selectedVoice = null;
@@ -242,48 +264,9 @@
       // nullの場合は「計測中...」と表示
       if (speedKnots === null) {
         speedDisplayElem.textContent = "計測中...";
-      } else {
-        // 速度表示（すでにスムージング済みの値を受け取る）
-        speedDisplayElem.textContent = speedKnots.toFixed(1);
-      }
-    }
-
-    let isAudioInitialized = false;
-
-    // 指定された速度（ノット）を発話する
-    function speakSpeed(speedKnots) {
-      // 前回の発話から7秒経過していない場合は発話しない
-      const now = Date.now();
-      if (now - lastSpeechTime < MIN_SPEECH_INTERVAL) {
-        console.log("発話間隔が短すぎるため、発話をスキップします");
-        
-        // スキップしても、発話ログには「スキップ」として記録
-        logSpeech(`速度 ${speedKnots.toFixed(1)} (発話間隔短のためスキップ)`);
-        return;
-      }
-      
-      // 速度が0または非常に小さい場合は「ゼロ」と発話
-      const speedText = speedKnots < 0.1 
-        ? "速度、ゼロ" 
-        : "速度、" + speedKnots.toFixed(1);
-      
-      const utterance = new SpeechSynthesisUtterance(speedText);
-      utterance.lang = 'ja-JP';
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-      }
-      
-      // 音声を再生
-      window.speechSynthesis.speak(utterance);
-      
-      // 発話時刻を更新
-      lastSpeechTime = now;
       
       // 発話ログを記録
-      logSpeech(`${speedText} (発話実行)`);
+      logSpeech(speedText);
     }
     
     // 発話履歴をログに記録する関数
@@ -316,6 +299,80 @@
         item.textContent = `${log.time}: ${log.text}`;
         speechLogElem.appendChild(item);
       });
+      } else {
+        // 速度表示（すでにスムージング済みの値を受け取る）
+        speedDisplayElem.textContent = speedKnots.toFixed(1);
+      }
+    }
+
+    let isAudioInitialized = false;
+
+    // 指定された速度（ノット）を発話する
+    function speakSpeed(speedKnots) {
+        announceIntervalId = setInterval(() => {
+          if (currentPosition && lastAnnouncedPosition) {
+            const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+            const speedKnots = convertToKnots(speedMps);
+            const smoothedSpeed = getSmoothedSpeed(speedKnots);
+            updateSpeedDisplay(smoothedSpeed);
+            
+            // スムージングされた速度がnullでない場合のみ発話
+            if (smoothedSpeed !== null) {
+              speakSpeed(smoothedSpeed);
+      // 速度が0または非常に小さい場合は「ゼロ」と発話
+      const speedText = speedKnots < 0.1 
+        ? "速度、ゼロ" 
+        : "速度、" + speedKnots.toFixed(1);
+      
+      const utterance = new SpeechSynthesisUtterance(speedText);
+      utterance.lang = 'ja-JP';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+      
+      // 音声を再生
+      window.speechSynthesis.speak(utterance);
+      }
+      // 次回の計算用に現在の位置を記録
+      if (currentPosition) {
+        lastAnnouncedPosition = currentPosition;
+      }
+    }
+
+    // ローカルストレージから秒数を取得
+    function loadIntervalFromStorage() {
+      const savedInterval = localStorage.getItem('intervalSeconds');
+      if (savedInterval) {
+        intervalSeconds = parseInt(savedInterval, 10);
+        intervalDisplayElem.textContent = intervalSeconds;
+      }
+    }
+
+    // ローカルストレージに秒数を保存
+    function saveIntervalToStorage() {
+      localStorage.setItem('intervalSeconds', intervalSeconds);
+    }
+
+    // ローカルストレージから保存した地点を取得
+    function loadSavedLocationsFromStorage() {
+      const savedLocationsData = localStorage.getItem('savedLocations');
+      if (savedLocationsData) {
+        savedLocations = JSON.parse(savedLocationsData);
+        updateSavedLocationsList();
+      }
+    }
+
+    // ローカルストレージに保存した地点を保存
+    function saveLocationsToStorage() {
+      localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+    }
+
+    // インターバルを増減する関数
+    function changeInterval(amount) {
+      let newInterval = parseInt(intervalDisplayElem.textContent, 10) + amount;
     }
 
     // 初回のボタン押下で音声再生を許可
