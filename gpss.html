@@ -152,8 +152,6 @@
     const MAX_SPEED_HISTORY = 5;
     // 発話ログの最大保持数
     const MAX_SPEECH_LOG = 10;
-    // 発話履歴の配列
-    let speechHistory = [];
     // 前回の発話時刻を保存する変数
     let lastSpeechTime = 0;
     // 発話間の最小間隔（ミリ秒）
@@ -270,66 +268,7 @@
       
       // 発話時刻を記録
       lastSpeechTime = Date.now();
-      
-      // 発話ログを記録
-      logSpeech(speedText);
     }
-    
-    // 発話履歴をログに記録する関数
-    function logSpeech(text) {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString();
-      
-      // 発話情報を配列の先頭に追加
-      speechHistory.unshift({
-        time: timeString,
-        text: text
-      });
-      
-      // 最大数を超えたら古いログを削除
-      if (speechHistory.length > MAX_SPEECH_LOG) {
-        speechHistory.pop();
-      }
-      
-      // 画面に表示を更新
-      updateSpeechLog();
-    }
-    
-    // 発話ログの表示を更新
-    function updateSpeechLog() {
-      speechLogElem.innerHTML = '';
-      
-      speechHistory.forEach(log => {
-        const item = document.createElement('div');
-        item.className = 'speech-log-item';
-        item.textContent = `${log.time}: ${log.text}`;
-        speechLogElem.appendChild(item);
-      });
-    }
-
-    // 初回のボタン押下で音声再生を許可
-    document.getElementById('hereButton').addEventListener('click', () => {
-      if (!isAudioInitialized) {
-        // 初回の音声再生を行い、フラグを設定
-        speakSpeed(0);
-        isAudioInitialized = true;
-        
-        // 定期的に音声を再生するタイマーを設定
-        announceIntervalId = setInterval(() => {
-          if (currentPosition && lastAnnouncedPosition) {
-            const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
-            const speedKnots = convertToKnots(speedMps);
-            const smoothedSpeed = getSmoothedSpeed(speedKnots);
-            updateSpeedDisplay(smoothedSpeed);
-            
-            // スムージングされた速度がnullでない場合のみ発話
-            if (smoothedSpeed !== null) {
-              //speakSpeed(smoothedSpeed);
-            }
-          }
-        }, intervalSeconds * 1000);
-      }
-    });
 
     // 発表タイミングで、前回の位置からの平均速度を算出して発言
     function announceCurrentSpeed() {
@@ -353,7 +292,7 @@
         // 前回の発話から7秒以内の場合はスキップ
         const now = Date.now();
         if (now - lastSpeechTime < MIN_SPEECH_INTERVAL) {
-          logSpeech("前回の発話から7秒以内のためスキップ");
+          // logSpeech("前回の発話から7秒以内のためスキップ");
         } else {
           speakSpeed(smoothedSpeed);
         }
