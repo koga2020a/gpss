@@ -98,6 +98,18 @@
       padding: 5px 0;
       border-bottom: 1px solid #eee;
     }
+    
+    /* 発語履歴のスタイル */
+    .speech-history {
+      margin-top: 15px;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+    }
+    .speech-item {
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 0.9em;
+    }
   </style>
   <!-- ResponsiveVoice.jsを追加 -->
   <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_API_KEY"></script>
@@ -121,6 +133,12 @@
       <h4>保存した地点</h4>
       <div id="savedLocationsList"></div>
     </div>
+    
+    <!-- 発語履歴を表示するセクションを追加 -->
+    <div class="speech-history">
+      <h4>発語履歴</h4>
+      <div id="speechHistoryList"></div>
+    </div>
   </div>
   <script>
     let watchId;
@@ -133,6 +151,9 @@
     // 速度値の履歴を保存する配列
     let speedHistory = [];
     const MAX_SPEED_HISTORY = 5;
+    // 発語履歴を保存する配列
+    let speechHistory = [];
+    const MAX_SPEECH_HISTORY = 10;
 
     const statusElem = document.getElementById('status');
     const speedDisplayElem = document.getElementById('speedDisplay');
@@ -141,6 +162,7 @@
     const decreaseIntervalButton = document.getElementById('decreaseInterval');
     const hereButton = document.getElementById('hereButton');
     const savedLocationsListElem = document.getElementById('savedLocationsList');
+    const speechHistoryListElem = document.getElementById('speechHistoryList');
 
     // 日本語の音声を選択（利用可能な場合）
     let selectedVoice = null;
@@ -223,18 +245,9 @@
     }
 
     let isAudioInitialized = false;
-    let isSpeaking = false; // 読み上げ中かどうかを追跡するフラグ
 
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
-      // すでに読み上げ中なら何もしない
-      if (isSpeaking) {
-        return;
-      }
-      
-      // 読み上げ中フラグをセット
-      isSpeaking = true;
-      
       // 速度が0または非常に小さい場合は「ゼロ」と発話
       const speedText = speedKnots < 0.1 
         ? "速度、ゼロ" 
@@ -249,18 +262,43 @@
         utterance.voice = selectedVoice;
       }
       
-      // 読み上げ終了時のイベントハンドラ
-      utterance.onend = function() {
-        isSpeaking = false; // フラグをリセット
-      };
-      
-      // エラー時もフラグをリセット
-      utterance.onerror = function() {
-        isSpeaking = false;
-      };
+      // 発語履歴に追加
+      addSpeechToHistory(speedText);
       
       // 音声を再生
       window.speechSynthesis.speak(utterance);
+    }
+    
+    // 発語履歴に新しい発語を追加する
+    function addSpeechToHistory(speechText) {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString();
+      
+      // 新しい発語を配列の先頭に追加
+      speechHistory.unshift({
+        time: timeString,
+        text: speechText
+      });
+      
+      // 最大数を超えたら古いものを削除
+      if (speechHistory.length > MAX_SPEECH_HISTORY) {
+        speechHistory.pop();
+      }
+      
+      // 画面に発語履歴を表示
+      updateSpeechHistoryList();
+    }
+    
+    // 発語履歴リストを更新
+    function updateSpeechHistoryList() {
+      speechHistoryListElem.innerHTML = '';
+      
+      speechHistory.forEach(speech => {
+        const item = document.createElement('div');
+        item.className = 'speech-item';
+        item.textContent = `${speech.time}: ${speech.text}`;
+        speechHistoryListElem.appendChild(item);
+      });
     }
 
     // 発表タイミングで、前回の位置からの平均速度を算出して発言
@@ -272,11 +310,7 @@
         const smoothedSpeed = getSmoothedSpeed(speedKnots);
         // スムージングされた速度で表示と発話を行う
         updateSpeedDisplay(smoothedSpeed);
-        
-        // スムージングされた速度がnullでない場合のみ発話
-        if (smoothedSpeed !== null) {
-          speakSpeed(smoothedSpeed);
-        }
+        speakSpeed(smoothedSpeed);
       }
       // 次回の計算用に現在の位置を記録
       if (currentPosition) {
