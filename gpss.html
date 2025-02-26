@@ -207,29 +207,28 @@
 
     // 速度の移動平均を計算する関数
     function getSmoothedSpeed(newSpeed) {
-      // 速度が急激に変化した場合、履歴をリセット
+      // 速度が急激に変化した場合でも履歴を完全にリセットしない
       // 例：現在の履歴の平均と新しい速度の差が1.5ノット以上ある場合
       if (speedHistory.length > 0) {
         const currentAvg = speedHistory.reduce((acc, speed) => acc + speed, 0) / speedHistory.length;
         if (Math.abs(currentAvg - newSpeed) > 1.5) {
-          speedHistory = [newSpeed];
+          // 履歴を完全にリセットせず、新しい値を追加
+          speedHistory = [newSpeed, currentAvg];
+        } else {
+          // 新しい速度を履歴に追加
+          speedHistory.unshift(newSpeed);
         }
+      } else {
+        // 履歴がない場合は新しい速度を追加
+        speedHistory.push(newSpeed);
       }
-      
-      // 新しい速度を履歴に追加
-      speedHistory.unshift(newSpeed);
       
       // 履歴が最大数を超えたら古いデータを削除
       if (speedHistory.length > MAX_SPEED_HISTORY) {
         speedHistory.pop();
       }
       
-      // 十分なデータが集まるまで計算しない（3つ以上のデータが必要）
-      if (speedHistory.length < 3) {
-        return null; // 十分なデータがない場合はnullを返す
-      }
-      
-      // 履歴の平均値を計算
+      // 常に値を返す（十分なデータがなくても）
       const sum = speedHistory.reduce((acc, speed) => acc + speed, 0);
       const avgSpeed = sum / speedHistory.length;
       
@@ -239,9 +238,9 @@
 
     // 画面上に速度を表示する
     function updateSpeedDisplay(speedKnots) {
-      // nullの場合は「計測中...」と表示
+      // nullの場合でも0と表示（「計測中...」と表示しない）
       if (speedKnots === null) {
-        speedDisplayElem.textContent = "計測中...";
+        speedDisplayElem.textContent = "0.0";
       } else {
         // 速度表示（すでにスムージング済みの値を受け取る）
         speedDisplayElem.textContent = speedKnots.toFixed(1);
