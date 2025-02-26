@@ -252,13 +252,6 @@
 
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
-      const now = Date.now();
-      // 前回の発話から7秒以内の場合はスキップ
-      if (now - lastSpeechTime < MIN_SPEECH_INTERVAL) {
-        logSpeech("前回の発話から7秒以内のためスキップ");
-        return;
-      }
-      
       // 速度が0または非常に小さい場合は「ゼロ」と発話
       const speedText = speedKnots < 0.1 
         ? "速度、ゼロ" 
@@ -277,7 +270,7 @@
       window.speechSynthesis.speak(utterance);
       
       // 発話時刻を記録
-      lastSpeechTime = now;
+      lastSpeechTime = Date.now();
       
       // 発話ログを記録
       logSpeech(speedText);
@@ -348,7 +341,14 @@
         const smoothedSpeed = getSmoothedSpeed(speedKnots);
         // スムージングされた速度で表示と発話を行う
         updateSpeedDisplay(smoothedSpeed);
-        speakSpeed(smoothedSpeed);
+        
+        // 前回の発話から7秒以内の場合はスキップ
+        const now = Date.now();
+        if (now - lastSpeechTime < MIN_SPEECH_INTERVAL) {
+          logSpeech("前回の発話から7秒以内のためスキップ");
+        } else {
+          speakSpeed(smoothedSpeed);
+        }
       }
       // 次回の計算用に現在の位置を記録
       if (currentPosition) {
