@@ -335,7 +335,16 @@
     // 発表タイミングで、前回の位置からの平均速度を算出して発言
     function announceCurrentSpeed() {
       if (currentPosition && lastAnnouncedPosition) {
-        const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+        let speedMps;
+        
+        // GeolocationCoordinates.speedプロパティを優先的に使用
+        if (currentPosition.coords.speed !== null && currentPosition.coords.speed !== undefined) {
+          speedMps = currentPosition.coords.speed;
+        } else {
+          // 従来の方法でフォールバック
+          speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+        }
+        
         const speedKnots = convertToKnots(speedMps);
         // スムージングされた速度を計算
         const smoothedSpeed = getSmoothedSpeed(speedKnots);
@@ -469,7 +478,16 @@
       
       // リアルタイムで速度を更新
       if (lastAnnouncedPosition) {
-        const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+        let speedMps;
+        
+        // GeolocationCoordinates.speedプロパティを優先的に使用
+        if (pos.coords.speed !== null && pos.coords.speed !== undefined) {
+          speedMps = pos.coords.speed;
+        } else {
+          // 従来の方法でフォールバック
+          speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+        }
+        
         const speedKnots = convertToKnots(speedMps);
         const smoothedSpeed = getSmoothedSpeed(speedKnots);
         updateSpeedDisplay(smoothedSpeed);
