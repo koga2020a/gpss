@@ -98,18 +98,6 @@
       padding: 5px 0;
       border-bottom: 1px solid #eee;
     }
-    
-    /* 発語履歴のスタイル */
-    .speech-history {
-      margin-top: 15px;
-      border-top: 1px solid #ddd;
-      padding-top: 10px;
-    }
-    .speech-item {
-      padding: 5px 0;
-      border-bottom: 1px solid #eee;
-      font-size: 0.9em;
-    }
   </style>
   <!-- ResponsiveVoice.jsを追加 -->
   <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_API_KEY"></script>
@@ -151,9 +139,6 @@
     // 速度値の履歴を保存する配列
     let speedHistory = [];
     const MAX_SPEED_HISTORY = 5;
-    // 発語履歴を保存する配列
-    let speechHistory = [];
-    const MAX_SPEECH_HISTORY = 10;
 
     const statusElem = document.getElementById('status');
     const speedDisplayElem = document.getElementById('speedDisplay');
@@ -162,27 +147,15 @@
     const decreaseIntervalButton = document.getElementById('decreaseInterval');
     const hereButton = document.getElementById('hereButton');
     const savedLocationsListElem = document.getElementById('savedLocationsList');
-    const speechHistoryListElem = document.getElementById('speechHistoryList');
 
     // 日本語の音声を選択（利用可能な場合）
     let selectedVoice = null;
     function setVoice() {
       const voices = speechSynthesis.getVoices();
-      selectedVoice = voices.find(voice => voice.lang.startsWith('ja')) || voices[0];
-      console.log('利用可能な音声:', voices.map(v => v.name + ' (' + v.lang + ')'));
-      console.log('選択された音声:', selectedVoice ? selectedVoice.name : 'なし');
+      selectedVoice = voices.find(voice => voice.lang.startsWith('ja')) || null;
     }
-    
-    // 音声を確実に初期化
-    function initializeSpeech() {
-      if (window.speechSynthesis) {
-        window.speechSynthesis.onvoiceschanged = setVoice;
-        setVoice();
-      } else {
-        console.error('Web Speech API がサポートされていません');
-        statusElem.textContent = "音声合成APIがサポートされていません。";
-      }
-    }
+    window.speechSynthesis.onvoiceschanged = setVoice;
+    setVoice();
 
     // 2点間の距離（メートル）をhaversineの公式で算出
     function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -259,80 +232,47 @@
 
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
-      // ResponsiveVoiceを使用する方法に変更
-      if (window.responsiveVoice && window.responsiveVoice.voiceSupport()) {
-        // 速度が0または非常に小さい場合は「ゼロ」と発話
-        const speedText = speedKnots < 0.1 
-          ? "速度、ゼロ" 
-          : "速度、" + speedKnots.toFixed(1);
+      // 速度が0または非常に小さい場合は「ゼロ」と発話
+      const speedText = speedKnots < 0.1 
+        ? "速度、ゼロ" 
+        : "速度、" + speedKnots.toFixed(1);
+      
+      const utterance = new SpeechSynthesisUtterance(speedText);
+      utterance.lang = 'ja-JP';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+      
+      // 音声を再生
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // 初回のボタン押下で音声再生を許可
+    document.getElementById('hereButton').addEventListener('click', () => {
+      if (!isAudioInitialized) {
+        // 初回の音声再生を行い、フラグを設定
+        speakSpeed(0);
+        isAudioInitialized = true;
         
-        // 発語履歴に追加
-        addSpeechToHistory(speedText);
-        
-        // ResponsiveVoiceで音声を再生
-        responsiveVoice.speak(speedText, "Japanese Female", {rate: 1.0, pitch: 1.0});
-      } else {
-        // フォールバック: Web Speech API
-        try {
-          // もし現在発話中なら停止
-          window.speechSynthesis.cancel();
-          
-          const speedText = speedKnots < 0.1 
-            ? "速度、ゼロ" 
-            : "速度、" + speedKnots.toFixed(1);
-          
-          const utterance = new SpeechSynthesisUtterance(speedText);
-          utterance.lang = 'ja-JP';
-          utterance.rate = 1.0;
-          utterance.pitch = 1.0;
-          
-          if (selectedVoice) {
-            utterance.voice = selectedVoice;
+        // 定期的に音声を再生するタイマーを設定
+        announceIntervalId = setInterval(() => {
+          if (currentPosition && lastAnnouncedPosition) {
+            const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+            const speedKnots = convertToKnots(speedMps);
+            const smoothedSpeed = getSmoothedSpeed(speedKnots);
+            updateSpeedDisplay(smoothedSpeed);
+            
+            // スムージングされた速度がnullでない場合のみ発話
+            if (smoothedSpeed !== null) {
+              speakSpeed(smoothedSpeed);
+            }
           }
-          
-          // 発語履歴に追加
-          addSpeechToHistory(speedText);
-          
-          // 音声を再生
-          window.speechSynthesis.speak(utterance);
-          console.log('発話: ' + speedText);
-        } catch (e) {
-          console.error('音声合成エラー:', e);
-        }
+        }, intervalSeconds * 1000);
       }
-    }
-    
-    // 発語履歴に新しい発語を追加する
-    function addSpeechToHistory(speechText) {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString();
-      
-      // 新しい発語を配列の先頭に追加
-      speechHistory.unshift({
-        time: timeString,
-        text: speechText
-      });
-      
-      // 最大数を超えたら古いものを削除
-      if (speechHistory.length > MAX_SPEECH_HISTORY) {
-        speechHistory.pop();
-      }
-      
-      // 画面に発語履歴を表示
-      updateSpeechHistoryList();
-    }
-    
-    // 発語履歴リストを更新
-    function updateSpeechHistoryList() {
-      speechHistoryListElem.innerHTML = '';
-      
-      speechHistory.forEach(speech => {
-        const item = document.createElement('div');
-        item.className = 'speech-item';
-        item.textContent = `${speech.time}: ${speech.text}`;
-        speechHistoryListElem.appendChild(item);
-      });
-    }
+    });
 
     // 発表タイミングで、前回の位置からの平均速度を算出して発言
     function announceCurrentSpeed() {
@@ -487,7 +427,6 @@
       
       loadIntervalFromStorage(); // 秒数をロード
       loadSavedLocationsFromStorage(); // 保存した地点をロード
-      initializeSpeech(); // 音声初期化を追加
 
       // 高精度で位置情報を取得（watchPositionで継続的に更新）
       watchId = navigator.geolocation.watchPosition(
