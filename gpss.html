@@ -223,9 +223,18 @@
     }
 
     let isAudioInitialized = false;
+    let isSpeaking = false; // 読み上げ中かどうかを追跡するフラグ
 
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
+      // すでに読み上げ中なら何もしない
+      if (isSpeaking) {
+        return;
+      }
+      
+      // 読み上げ中フラグをセット
+      isSpeaking = true;
+      
       // 速度が0または非常に小さい場合は「ゼロ」と発話
       const speedText = speedKnots < 0.1 
         ? "速度、ゼロ" 
@@ -240,33 +249,19 @@
         utterance.voice = selectedVoice;
       }
       
+      // 読み上げ終了時のイベントハンドラ
+      utterance.onend = function() {
+        isSpeaking = false; // フラグをリセット
+      };
+      
+      // エラー時もフラグをリセット
+      utterance.onerror = function() {
+        isSpeaking = false;
+      };
+      
       // 音声を再生
       window.speechSynthesis.speak(utterance);
     }
-
-    // 初回のボタン押下で音声再生を許可
-    document.getElementById('hereButton').addEventListener('click', () => {
-      if (!isAudioInitialized) {
-        // 初回の音声再生を行い、フラグを設定
-        speakSpeed(0);
-        isAudioInitialized = true;
-        
-        // 定期的に音声を再生するタイマーを設定
-        announceIntervalId = setInterval(() => {
-          if (currentPosition && lastAnnouncedPosition) {
-            const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
-            const speedKnots = convertToKnots(speedMps);
-            const smoothedSpeed = getSmoothedSpeed(speedKnots);
-            updateSpeedDisplay(smoothedSpeed);
-            
-            // スムージングされた速度がnullでない場合のみ発話
-            if (smoothedSpeed !== null) {
-              speakSpeed(smoothedSpeed);
-            }
-          }
-        }, intervalSeconds * 1000);
-      }
-    });
 
     // 発表タイミングで、前回の位置からの平均速度を算出して発言
     function announceCurrentSpeed() {
@@ -277,7 +272,11 @@
         const smoothedSpeed = getSmoothedSpeed(speedKnots);
         // スムージングされた速度で表示と発話を行う
         updateSpeedDisplay(smoothedSpeed);
-        speakSpeed(smoothedSpeed);
+        
+        // スムージングされた速度がnullでない場合のみ発話
+        if (smoothedSpeed !== null) {
+          speakSpeed(smoothedSpeed);
+        }
       }
       // 次回の計算用に現在の位置を記録
       if (currentPosition) {
