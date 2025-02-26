@@ -223,9 +223,13 @@
     }
 
     let isAudioInitialized = false;
+    let isSpeaking = false; // 発話中かどうかを追跡するフラグ
 
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
+      // すでに発話中なら新しい発話をスキップ
+      if (isSpeaking) return;
+      
       // 速度が0または非常に小さい場合は「ゼロ」と発話
       const speedText = speedKnots < 0.1 
         ? "速度、ゼロ" 
@@ -239,6 +243,19 @@
       if (selectedVoice) {
         utterance.voice = selectedVoice;
       }
+      
+      // 発話開始時にフラグを設定
+      isSpeaking = true;
+      
+      // 発話終了時にフラグをリセット
+      utterance.onend = () => {
+        isSpeaking = false;
+      };
+      
+      // 発話エラー時にもフラグをリセット
+      utterance.onerror = () => {
+        isSpeaking = false;
+      };
       
       // 音声を再生
       window.speechSynthesis.speak(utterance);
@@ -258,7 +275,11 @@
             const speedKnots = convertToKnots(speedMps);
             const smoothedSpeed = getSmoothedSpeed(speedKnots);
             updateSpeedDisplay(smoothedSpeed);
-            speakSpeed(smoothedSpeed);
+            
+            // 発話中でなければ速度を発話
+            if (!isSpeaking) {
+              speakSpeed(smoothedSpeed);
+            }
           }
         }, intervalSeconds * 1000);
       }
