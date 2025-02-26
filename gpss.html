@@ -168,10 +168,21 @@
     let selectedVoice = null;
     function setVoice() {
       const voices = speechSynthesis.getVoices();
-      selectedVoice = voices.find(voice => voice.lang.startsWith('ja')) || null;
+      selectedVoice = voices.find(voice => voice.lang.startsWith('ja')) || voices[0];
+      console.log('利用可能な音声:', voices.map(v => v.name + ' (' + v.lang + ')'));
+      console.log('選択された音声:', selectedVoice ? selectedVoice.name : 'なし');
     }
-    window.speechSynthesis.onvoiceschanged = setVoice;
-    setVoice();
+    
+    // 音声を確実に初期化
+    function initializeSpeech() {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = setVoice;
+        setVoice();
+      } else {
+        console.error('Web Speech API がサポートされていません');
+        statusElem.textContent = "音声合成APIがサポートされていません。";
+      }
+    }
 
     // 2点間の距離（メートル）をhaversineの公式で算出
     function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -248,25 +259,47 @@
 
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
-      // 速度が0または非常に小さい場合は「ゼロ」と発話
-      const speedText = speedKnots < 0.1 
-        ? "速度、ゼロ" 
-        : "速度、" + speedKnots.toFixed(1);
-      
-      const utterance = new SpeechSynthesisUtterance(speedText);
-      utterance.lang = 'ja-JP';
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
+      // ResponsiveVoiceを使用する方法に変更
+      if (window.responsiveVoice && window.responsiveVoice.voiceSupport()) {
+        // 速度が0または非常に小さい場合は「ゼロ」と発話
+        const speedText = speedKnots < 0.1 
+          ? "速度、ゼロ" 
+          : "速度、" + speedKnots.toFixed(1);
+        
+        // 発語履歴に追加
+        addSpeechToHistory(speedText);
+        
+        // ResponsiveVoiceで音声を再生
+        responsiveVoice.speak(speedText, "Japanese Female", {rate: 1.0, pitch: 1.0});
+      } else {
+        // フォールバック: Web Speech API
+        try {
+          // もし現在発話中なら停止
+          window.speechSynthesis.cancel();
+          
+          const speedText = speedKnots < 0.1 
+            ? "速度、ゼロ" 
+            : "速度、" + speedKnots.toFixed(1);
+          
+          const utterance = new SpeechSynthesisUtterance(speedText);
+          utterance.lang = 'ja-JP';
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          
+          if (selectedVoice) {
+            utterance.voice = selectedVoice;
+          }
+          
+          // 発語履歴に追加
+          addSpeechToHistory(speedText);
+          
+          // 音声を再生
+          window.speechSynthesis.speak(utterance);
+          console.log('発話: ' + speedText);
+        } catch (e) {
+          console.error('音声合成エラー:', e);
+        }
       }
-      
-      // 発語履歴に追加
-      addSpeechToHistory(speedText);
-      
-      // 音声を再生
-      window.speechSynthesis.speak(utterance);
     }
     
     // 発語履歴に新しい発語を追加する
@@ -454,6 +487,7 @@
       
       loadIntervalFromStorage(); // 秒数をロード
       loadSavedLocationsFromStorage(); // 保存した地点をロード
+      initializeSpeech(); // 音声初期化を追加
 
       // 高精度で位置情報を取得（watchPositionで継続的に更新）
       watchId = navigator.geolocation.watchPosition(
