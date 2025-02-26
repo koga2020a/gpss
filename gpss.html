@@ -276,11 +276,14 @@
     function saveCurrentLocation() {
       if (!currentPosition) return;
       
+      const distance = 0; // 保存時点では自分の位置なので距離は0
+      
       const location = {
         latitude: currentPosition.coords.latitude,
         longitude: currentPosition.coords.longitude,
         timestamp: new Date().toLocaleTimeString(),
-        id: Date.now()
+        id: Date.now(),
+        savedDistance: distance  // 保存時の距離を記録
       };
       
       // 最大5箇所まで保存（新しいものを先頭に追加）
@@ -297,18 +300,25 @@
     function updateSavedLocationsList() {
       savedLocationsListElem.innerHTML = '';
       
-      savedLocations.forEach(loc => {
-        const distance = currentPosition ? 
-          haversineDistance(
+      savedLocations.forEach((loc, index) => {
+        let displayDistance;
+        
+        if (index === 0 && currentPosition) {
+          // 最新の地点のみ現在位置からの距離を計算して更新
+          displayDistance = haversineDistance(
             currentPosition.coords.latitude, 
             currentPosition.coords.longitude,
             loc.latitude, 
             loc.longitude
-          ) : 0;
+          );
+        } else {
+          // その他の地点は保存時の距離を表示
+          displayDistance = loc.savedDistance || 0;
+        }
           
         const item = document.createElement('div');
         item.className = 'location-item';
-        item.innerHTML = `${loc.timestamp} - 距離: ${Math.round(distance)} メートル`;
+        item.innerHTML = `${loc.timestamp} - 距離: ${Math.round(displayDistance)} メートル`;
         savedLocationsListElem.appendChild(item);
       });
     }
