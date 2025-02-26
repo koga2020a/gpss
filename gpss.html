@@ -99,6 +99,8 @@
       border-bottom: 1px solid #eee;
     }
   </style>
+  <!-- ResponsiveVoice.jsを追加 -->
+  <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_API_KEY"></script>
 </head>
 <body>
   <div class="container">
@@ -210,11 +212,13 @@
       const speedText = speedKnots < 0.1 
         ? "速度、ゼロ" 
         : "速度、" + speedKnots.toFixed(1);
-      const utterance = new SpeechSynthesisUtterance(speedText);
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
+      
+      // ResponsiveVoiceを使用
+      if (typeof responsiveVoice !== 'undefined') {
+        responsiveVoice.speak(speedText, "Japanese Female", {rate: 1.0});
+      } else {
+        console.error('ResponsiveVoiceが読み込まれていません');
       }
-      speechSynthesis.speak(utterance);
     }
 
     // 発表タイミングで、前回の位置からの平均速度を算出して発言
