@@ -205,27 +205,27 @@
       speechSynthesis.speak(utterance);
     }
 
-    // 画面上に速度を表示する
-    function updateSpeedDisplay(speedKnots) {
-      // 速度をスムージングして表示
-      const smoothedSpeed = getSmoothedSpeed(speedKnots);
-      speedDisplayElem.textContent = smoothedSpeed.toFixed(1);
-    }
-
     // 発表タイミングで、前回の位置からの平均速度を算出して発言
     function announceCurrentSpeed() {
       if (currentPosition && lastAnnouncedPosition) {
         const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
         const speedKnots = convertToKnots(speedMps);
-        // スムージングされた速度を発話
+        // スムージングされた速度を計算
         const smoothedSpeed = getSmoothedSpeed(speedKnots);
+        // スムージングされた速度で表示と発話を行う
+        updateSpeedDisplay(smoothedSpeed);
         speakSpeed(smoothedSpeed);
-        updateSpeedDisplay(speedKnots); // この関数内でスムージングが適用される
       }
       // 次回の計算用に現在の位置を記録
       if (currentPosition) {
         lastAnnouncedPosition = currentPosition;
       }
+    }
+
+    // 画面上に速度を表示する
+    function updateSpeedDisplay(speedKnots) {
+      // 速度表示（すでにスムージング済みの値を受け取る）
+      speedDisplayElem.textContent = speedKnots.toFixed(1);
     }
 
     // ローカルストレージから秒数を取得
@@ -343,7 +343,8 @@
       if (lastAnnouncedPosition) {
         const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
         const speedKnots = convertToKnots(speedMps);
-        updateSpeedDisplay(speedKnots);
+        const smoothedSpeed = getSmoothedSpeed(speedKnots);
+        updateSpeedDisplay(smoothedSpeed);
       }
       
       // 保存地点があれば距離を更新
