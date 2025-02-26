@@ -224,30 +224,25 @@
 
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
-      // データが不十分な場合は発話しない
-      if (speedKnots === null) return;
-      
-      // 音声合成を停止
-      window.speechSynthesis.cancel();
-      
       // 速度が0または非常に小さい場合は「ゼロ」と発話
       const speedText = speedKnots < 0.1 
         ? "速度、ゼロ" 
         : "速度、" + speedKnots.toFixed(1);
       
+      // ユーザー操作をトリガーにして音声を再生
       const utterance = new SpeechSynthesisUtterance(speedText);
-      
-      // 日本語の音声を設定
       utterance.lang = 'ja-JP';
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
       
-      // 利用可能な日本語の音声があれば設定
       if (selectedVoice) {
         utterance.voice = selectedVoice;
       }
       
-      window.speechSynthesis.speak(utterance);
+      // ボタンをクリックしたときに音声を再生
+      document.getElementById('hereButton').addEventListener('click', () => {
+        window.speechSynthesis.speak(utterance);
+      });
     }
 
     // 発表タイミングで、前回の位置からの平均速度を算出して発言
