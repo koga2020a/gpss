@@ -198,7 +198,10 @@
       
       // 履歴の平均値を計算
       const sum = speedHistory.reduce((acc, speed) => acc + speed, 0);
-      return sum / speedHistory.length;
+      const avgSpeed = sum / speedHistory.length;
+      
+      // 停止状態の判定（閾値以下なら0とみなす）
+      return avgSpeed < 0.5 ? 0 : avgSpeed;
     }
 
     // 指定された速度（ノット）を発話する
