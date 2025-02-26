@@ -198,6 +198,11 @@
         speedHistory.pop();
       }
       
+      // 十分なデータが集まるまで計算しない（3つ以上のデータが必要）
+      if (speedHistory.length < 3) {
+        return null; // 十分なデータがない場合はnullを返す
+      }
+      
       // 履歴の平均値を計算
       const sum = speedHistory.reduce((acc, speed) => acc + speed, 0);
       const avgSpeed = sum / speedHistory.length;
@@ -206,8 +211,22 @@
       return avgSpeed < 0.5 ? 0 : avgSpeed;
     }
 
+    // 画面上に速度を表示する
+    function updateSpeedDisplay(speedKnots) {
+      // nullの場合は「計測中...」と表示
+      if (speedKnots === null) {
+        speedDisplayElem.textContent = "計測中...";
+      } else {
+        // 速度表示（すでにスムージング済みの値を受け取る）
+        speedDisplayElem.textContent = speedKnots.toFixed(1);
+      }
+    }
+
     // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
+      // データが不十分な場合は発話しない
+      if (speedKnots === null) return;
+      
       // 音声合成を停止
       window.speechSynthesis.cancel();
       
@@ -246,12 +265,6 @@
       if (currentPosition) {
         lastAnnouncedPosition = currentPosition;
       }
-    }
-
-    // 画面上に速度を表示する
-    function updateSpeedDisplay(speedKnots) {
-      // 速度表示（すでにスムージング済みの値を受け取る）
-      speedDisplayElem.textContent = speedKnots.toFixed(1);
     }
 
     // ローカルストレージから秒数を取得
