@@ -61,6 +61,7 @@
       text-align: center;
       font-size: 2em;
       font-weight: bold;
+      cursor: pointer; /* タップ可能なことを示すカーソルスタイルを追加 */
     }
     .interval-container {
       display: flex;
@@ -118,7 +119,7 @@
     <p id="status">位置情報取得中...</p>
     
     <div class="speed-container">
-      <div class="speed-display"><span id="speedDisplay">0</span> ノット</div>
+      <div class="speed-display" id="speedDisplayContainer"><span id="speedDisplay">0</span> ノット</div>
     </div>
     
     <button id="hereButton" class="here-btn">ここ</button>
@@ -151,6 +152,7 @@
 
     const statusElem = document.getElementById('status');
     const speedDisplayElem = document.getElementById('speedDisplay');
+    const speedDisplayContainerElem = document.getElementById('speedDisplayContainer');
     const intervalDisplayElem = document.getElementById('intervalDisplay');
     const increaseIntervalButton = document.getElementById('increaseInterval');
     const decreaseIntervalButton = document.getElementById('decreaseInterval');
@@ -263,7 +265,7 @@
     }
 
     // 初回のボタン押下で音声再生を許可
-    document.getElementById('hereButton').addEventListener('click', () => {
+    function initializeAudio() {
       if (!isAudioInitialized) {
         // 初回の音声再生を行い、フラグを設定
         speakSpeed(0);
@@ -283,6 +285,36 @@
             }
           }
         }, intervalSeconds * 1000);
+      }
+    }
+
+    // 「ここ」ボタンのイベントリスナー
+    document.getElementById('hereButton').addEventListener('click', () => {
+      initializeAudio();
+    });
+
+    // 速度表示部分のタップイベントを追加
+    speedDisplayContainerElem.addEventListener('click', () => {
+      initializeAudio();
+      
+      // 現在の速度を即座に読み上げる
+      if (currentPosition && lastAnnouncedPosition) {
+        let speedMps;
+        
+        if (currentPosition.coords.speed !== null && currentPosition.coords.speed !== undefined) {
+          speedMps = currentPosition.coords.speed;
+        } else {
+          speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+        }
+        
+        const speedKnots = convertToKnots(speedMps);
+        const smoothedSpeed = getSmoothedSpeed(speedKnots);
+        
+        // 前回の発話から7秒以上経過している場合のみ発話
+        const now = Date.now();
+        if (now - lastSpeechTime >= MIN_SPEECH_INTERVAL) {
+          speakSpeed(smoothedSpeed);
+        }
       }
     });
 
