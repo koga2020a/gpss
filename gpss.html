@@ -66,7 +66,7 @@
     .interval-container {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center; /* 中央に配置 */
       margin: 15px 0;
     }
     .speed-btn {
@@ -81,10 +81,18 @@
       background: #00bfff; /* + ボタンを水色に */
     }
     .interval-display {
-      flex-grow: 1;
+      display: inline-flex; /* インラインフレックスで配置 */
+      align-items: baseline; /* ベースラインで揃える */
       text-align: center;
       font-size: 2em;
       font-weight: bold;
+      cursor: pointer; /* タップ可能なことを示す */
+      position: relative; /* 単位の配置のため */
+    }
+    .interval-unit {
+      font-size: 0.5em;
+      font-weight: normal;
+      margin-left: 2px; /* 数字と単位の間隔を調整 */
     }
     .here-btn {
       margin: 10px 0;
@@ -112,9 +120,10 @@
 <body>
   <div class="container">
     <div class="interval-container">
-      <button class="speed-btn" id="decreaseInterval">-</button>
-      <div class="interval-display"><span id="intervalDisplay">30</span> 秒</div>
-      <button class="speed-btn" id="increaseInterval">+</button>
+      <div class="interval-display" id="intervalDisplayContainer">
+        <span id="intervalDisplay">30</span>
+        <span class="interval-unit">s</span>
+      </div>
     </div>
     <p id="status">位置情報取得中...</p>
     
@@ -149,13 +158,14 @@
     let lastSpeechTime = 0;
     // 発話間の最小間隔（ミリ秒）
     const MIN_SPEECH_INTERVAL = 7000;
+    // 間隔の設定値（秒）
+    const INTERVAL_VALUES = [null, 10, 30, 50, 120, 240];
 
     const statusElem = document.getElementById('status');
     const speedDisplayElem = document.getElementById('speedDisplay');
     const speedDisplayContainerElem = document.getElementById('speedDisplayContainer');
     const intervalDisplayElem = document.getElementById('intervalDisplay');
-    const increaseIntervalButton = document.getElementById('increaseInterval');
-    const decreaseIntervalButton = document.getElementById('decreaseInterval');
+    const intervalDisplayContainerElem = document.getElementById('intervalDisplayContainer');
     const hereButton = document.getElementById('hereButton');
     const savedLocationsListElem = document.getElementById('savedLocationsList');
 
@@ -355,7 +365,7 @@
       const savedInterval = localStorage.getItem('intervalSeconds');
       if (savedInterval) {
         intervalSeconds = parseInt(savedInterval, 10);
-        intervalDisplayElem.textContent = intervalSeconds;
+        intervalDisplayElem.textContent = intervalSeconds === null ? "なし" : intervalSeconds ;
       }
     }
 
@@ -378,17 +388,24 @@
       localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
     }
 
-    // インターバルを増減する関数
-    function changeInterval(amount) {
-      let newInterval = parseInt(intervalDisplayElem.textContent, 10) + amount;
-      if (newInterval >= 10) {
-        intervalDisplayElem.textContent = newInterval;
-        intervalSeconds = newInterval;
-        saveIntervalToStorage(); // 変更後の秒数を保存
-
-        // インターバルが変更されたら、タイマーを再設定
-        if (announceIntervalId) {
-          clearInterval(announceIntervalId);
+    // 間隔をトグルする関数
+    function toggleInterval() {
+      const currentInterval = parseInt(intervalDisplayElem.textContent, 10) || null;
+      let nextIndex = 0;
+      for (let i = 0; i < INTERVAL_VALUES.length; i++) {
+        if (currentInterval === INTERVAL_VALUES[i]) {
+          nextIndex = (i + 1) % INTERVAL_VALUES.length;
+          break;
+        }
+      }
+      
+      intervalSeconds = INTERVAL_VALUES[nextIndex];
+      intervalDisplayElem.textContent = intervalSeconds === null ? "なし" : intervalSeconds + "s";
+      saveIntervalToStorage();
+      
+      if (announceIntervalId) {
+        clearInterval(announceIntervalId);
+        if (intervalSeconds !== null) {
           announceIntervalId = setInterval(announceCurrentSpeed, intervalSeconds * 1000);
         }
       }
@@ -485,8 +502,7 @@
     }
 
     // イベントリスナーの設定
-    increaseIntervalButton.addEventListener('click', () => changeInterval(10));
-    decreaseIntervalButton.addEventListener('click', () => changeInterval(-10));
+    intervalDisplayContainerElem.addEventListener('click', toggleInterval);
     hereButton.addEventListener('click', saveCurrentLocation);
 
     // アプリ起動時に自動で開始
@@ -507,7 +523,22 @@
     }
 
     // ページ読み込み時に初期化
-    window.addEventListener('load', initialize);
+    document.addEventListener('DOMContentLoaded', () => {
+      const statusElem = document.getElementById('status');
+      const speedDisplayElem = document.getElementById('speedDisplay');
+      const speedDisplayContainerElem = document.getElementById('speedDisplayContainer');
+      const intervalDisplayElem = document.getElementById('intervalDisplay');
+      const intervalDisplayContainerElem = document.getElementById('intervalDisplayContainer');
+      const hereButton = document.getElementById('hereButton');
+      const savedLocationsListElem = document.getElementById('savedLocationsList');
+
+      // イベントリスナーの設定
+      intervalDisplayContainerElem.addEventListener('click', toggleInterval);
+      hereButton.addEventListener('click', saveCurrentLocation);
+
+      // アプリ起動時に自動で開始
+      initialize();
+    });
   </script>
 </body>
 </html>
