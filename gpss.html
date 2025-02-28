@@ -134,7 +134,7 @@
     <button id="hereButton" class="here-btn">ここ</button>
     
     <div class="saved-locations">
-      <h4>保存した地点</h4>
+      <h4 id="savedLocationsTitle">保存した地点</h4>
       <div id="savedLocationsList"></div>
     </div>
     
@@ -168,6 +168,7 @@
     const intervalDisplayContainerElem = document.getElementById('intervalDisplayContainer');
     const hereButton = document.getElementById('hereButton');
     const savedLocationsListElem = document.getElementById('savedLocationsList');
+    const savedLocationsTitle = document.getElementById('savedLocationsTitle');
 
     // 日本語の音声を選択（利用可能な場合）
     let selectedVoice = null;
@@ -522,6 +523,22 @@
       );
     }
 
+    // 保存した地点の履歴をクリアする
+    function clearSavedLocations() {
+      savedLocations = [];
+      updateSavedLocationsList();
+      saveLocationsToStorage();
+    }
+    
+    // 「保存した地点」タイトルのクリックイベント
+    savedLocationsTitle.addEventListener('click', () => {
+      if (savedLocations.length > 0) {
+        if (confirm('履歴を削除しますか？')) {
+          clearSavedLocations();
+        }
+      }
+    });
+
     // ページ読み込み時に初期化
     document.addEventListener('DOMContentLoaded', () => {
       const statusElem = document.getElementById('status');
@@ -531,10 +548,18 @@
       const intervalDisplayContainerElem = document.getElementById('intervalDisplayContainer');
       const hereButton = document.getElementById('hereButton');
       const savedLocationsListElem = document.getElementById('savedLocationsList');
+      const savedLocationsTitle = document.getElementById('savedLocationsTitle');
 
       // イベントリスナーの設定
       intervalDisplayContainerElem.addEventListener('click', toggleInterval);
       hereButton.addEventListener('click', saveCurrentLocation);
+      savedLocationsTitle.addEventListener('click', () => {
+        if (savedLocations.length > 0) {
+          if (confirm('履歴を削除しますか？')) {
+            clearSavedLocations();
+          }
+        }
+      });
 
       // アプリ起動時に自動で開始
       initialize();
