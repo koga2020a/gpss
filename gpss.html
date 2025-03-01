@@ -144,9 +144,60 @@
       border-bottom: 1px solid #eee;
       font-size: 0.9em;
     }
+    
+    /* マップ表示用のモーダルウィンドウスタイル */
+    .map-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+    }
+    
+    .map-modal-content {
+      position: relative;
+      width: 90%;
+      height: 80%;
+      margin: 10% auto;
+      background-color: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+      background-color: #fff;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      z-index: 1001;
+    }
   </style>
   <!-- ResponsiveVoice.jsを追加 -->
   <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_API_KEY"></script>
+  <!-- Google Maps APIを追加 -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
   <div class="container">
@@ -170,6 +221,15 @@
     </div>
     
   </div>
+  
+  <!-- マップ表示用のモーダルウィンドウ -->
+  <div id="mapModal" class="map-modal">
+    <div class="map-modal-content">
+      <div id="map"></div>
+      <div class="close-btn" id="closeMapBtn">×</div>
+    </div>
+  </div>
+  
   <script>
     let watchId;
     let currentPosition = null;
@@ -748,6 +808,49 @@
 
       // アプリ起動時に自動で開始
       initialize();
+    });
+
+    // マップを初期化する関数
+    function initMap() {
+      const mapModal = document.getElementById('mapModal');
+      const closeMapBtn = document.getElementById('closeMapBtn');
+      const mapElement = document.getElementById('map');
+
+      function showMap(lat, lng) {
+        mapModal.style.display = 'block';
+        const map = L.map(mapElement).setView([lat, lng], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        L.marker([lat, lng]).addTo(map);
+      }
+
+      function closeMap() {
+        mapModal.style.display = 'none';
+      }
+
+      closeMapBtn.addEventListener('click', closeMap);
+
+      // 各地点のクリックイベントを設定
+      savedLocationsListElem.addEventListener('click', (event) => {
+        const target = event.target.closest('.location-item');
+        if (target) {
+          const index = Array.from(savedLocationsListElem.children).indexOf(target);
+          if (index !== -1) {
+            const location = savedLocations[index];
+            showMap(location.latitude, location.longitude);
+          }
+        }
+      });
+    }
+
+    // ページ読み込み時に初期化
+    document.addEventListener('DOMContentLoaded', () => {
+      initialize();
+      initMap(); // マップの初期化を追加
     });
   </script>
 </body>
