@@ -519,7 +519,7 @@
         let timeDiff = '';
         let currentStats = '';
         
-        if (currentPosition) {
+        if (index === 0 && currentPosition) {
           // 現在位置からの距離を計算
           displayDistance = haversineDistance(
             currentPosition.coords.latitude, 
