@@ -825,7 +825,25 @@
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        L.marker([lat, lng]).addTo(map);
+        // 現在の位置を最初に追加
+        const latlngs = [];
+        if (currentPosition) {
+          latlngs.push([currentPosition.coords.latitude, currentPosition.coords.longitude]);
+          L.marker([currentPosition.coords.latitude, currentPosition.coords.longitude]).addTo(map)
+            .bindPopup("現在位置");
+        }
+
+        // 各地点にマーカーを追加
+        savedLocations.forEach(location => {
+          latlngs.push([location.latitude, location.longitude]);
+          L.marker([location.latitude, location.longitude]).addTo(map)
+            .bindPopup(location.timestamp);
+        });
+
+        // 地点を結ぶ線を描画
+        if (latlngs.length > 1) {
+          L.polyline(latlngs, { color: 'blue' }).addTo(map);
+        }
       }
 
       function closeMap() {
