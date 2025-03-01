@@ -107,6 +107,26 @@
       padding: 5px 0;
       border-bottom: 1px solid #eee;
     }
+    .location-stats {
+      text-align: center;
+      font-size: 0.9em;
+      color: #666;
+    }
+    .time-display {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    .distance-display {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    .speed-value {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    .muted-seconds {
+      color: #aaa;
+    }
     /* デバッグ情報表示用のスタイル */
     .speech-log-item {
       padding: 5px 0;
@@ -364,10 +384,12 @@
     // ローカルストレージから秒数を取得
     function loadIntervalFromStorage() {
       const savedInterval = localStorage.getItem('intervalSeconds');
-      if (savedInterval) {
-        intervalSeconds = parseInt(savedInterval, 10);
-        intervalDisplayElem.textContent = intervalSeconds === null ? "なし" : intervalSeconds ;
+      if (savedInterval && INTERVAL_VALUES.includes(savedInterval === "null" ? null : parseInt(savedInterval, 10))) {
+        intervalSeconds = savedInterval === "null" ? null : parseInt(savedInterval, 10);
+      } else {
+        intervalSeconds = 30; // デフォルトの30秒に設定
       }
+      intervalDisplayElem.textContent = intervalSeconds === null ? "ミュート" : intervalSeconds + "s";
     }
 
     // ローカルストレージに秒数を保存
@@ -401,7 +423,7 @@
       }
       
       intervalSeconds = INTERVAL_VALUES[nextIndex];
-      intervalDisplayElem.textContent = intervalSeconds === null ? "なし" : intervalSeconds + "s";
+      intervalDisplayElem.textContent = intervalSeconds === null ? "ミュート" : intervalSeconds + "s";
       saveIntervalToStorage();
       
       if (announceIntervalId) {
@@ -410,6 +432,25 @@
           announceIntervalId = setInterval(announceCurrentSpeed, intervalSeconds * 1000);
         }
       }
+    }
+
+    // 2点間の方位角を計算する関数（度数法）
+    function calculateBearing(lat1, lon1, lat2, lon2) {
+      const toRad = Math.PI / 180;
+      const y = Math.sin((lon2 - lon1) * toRad) * Math.cos(lat2 * toRad);
+      const x = Math.cos(lat1 * toRad) * Math.sin(lat2 * toRad) -
+                Math.sin(lat1 * toRad) * Math.cos(lat2 * toRad) * Math.cos((lon2 - lon1) * toRad);
+      let bearing = Math.atan2(y, x) * 180 / Math.PI;
+      bearing = (bearing + 360) % 360; // 0-360度に正規化
+      return bearing;
+    }
+
+    // 方位角を16方位の文字列に変換する関数
+    function bearingToDirection(bearing) {
+      const directions = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', 
+                          '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西'];
+      const index = Math.round(bearing / 22.5) % 16;
+      return directions[index];
     }
 
     // 現在地を保存する
@@ -421,7 +462,8 @@
       const location = {
         latitude: currentPosition.coords.latitude,
         longitude: currentPosition.coords.longitude,
-        timestamp: new Date().toLocaleTimeString(),
+        timestamp: new Date().toLocaleTimeString('ja-JP', {hour12: false}),
+        time: new Date().getTime(), // ミリ秒単位のタイムスタンプを保存
         id: Date.now(),
         savedDistance: distance  // 保存時の距離を記録
       };
@@ -442,23 +484,102 @@
       
       savedLocations.forEach((loc, index) => {
         let displayDistance;
+        let bearing = '';
+        let direction = '';
+        let timeDiff = '';
+        let avgSpeed = '';
         
-        if (index === 0 && currentPosition) {
-          // 最新の地点のみ現在位置からの距離を計算して更新
+        if (currentPosition) {
+          // 現在位置からの距離を計算
           displayDistance = haversineDistance(
             currentPosition.coords.latitude, 
             currentPosition.coords.longitude,
             loc.latitude, 
             loc.longitude
           );
+          
+          // 方位角と方位を計算
+          bearing = calculateBearing(
+            currentPosition.coords.latitude,
+            currentPosition.coords.longitude,
+            loc.latitude,
+            loc.longitude
+          );
+          
+          // 距離が0mの場合は方位を「－」と表示
+          direction = Math.round(displayDistance) === 0 ? "－" : 
+                     `${Math.round(bearing).toString().padStart(3, '0')} ${bearingToDirection(bearing)}`;
+          
+          // 現在位置と最新の記録地点との時間差と平均速度を計算（最新の地点のみ）
+          if (index === 0) {
+            const currentTime = new Date().getTime();
+            const timeElapsedCurrent = (currentTime - loc.time) / (1000 * 60); // 分単位
+            
+            if (timeElapsedCurrent > 0) {
+              // 現在位置と最新地点間の距離を使用
+              const currentSpeedMps = displayDistance / (timeElapsedCurrent * 60); // m/s
+              const currentSpeedKnots = convertToKnots(currentSpeedMps);
+              
+              // 現在位置との情報を追加
+              if (Math.round(displayDistance) > 0) {
+                timeDiff = `現在: ${timeElapsedCurrent.toFixed(1)}分経過 - 平均: <span class="speed-value">${currentSpeedKnots.toFixed(1)}</span>ノット`;
+              }
+            }
+          }
         } else {
-          // その他の地点は保存時の距離を表示
           displayDistance = loc.savedDistance || 0;
         }
+        
+        // 前の地点との時間差と平均速度を計算（2つ目以降の地点のみ）
+        if (index < savedLocations.length - 1) {
+          const prevLoc = savedLocations[index + 1];
+          const timeElapsed = (loc.time - prevLoc.time) / (1000 * 60); // 分単位
+          
+          if (timeElapsed > 0) {
+            // 2点間の距離を計算
+            const pointDistance = haversineDistance(
+              loc.latitude, loc.longitude,
+              prevLoc.latitude, prevLoc.longitude
+            );
+            
+            // 平均速度をノットで計算（m/分からノットへ変換）
+            const speedMps = pointDistance / (timeElapsed * 60); // m/s
+            const speedKnots = convertToKnots(speedMps);
+            
+            // 既存の情報がある場合は改行を追加
+            if (timeDiff) {
+              timeDiff += "<br>";
+            }
+            
+            timeDiff += `経過: ${timeElapsed.toFixed(1)}分 - 平均: <span class="speed-value">${speedKnots.toFixed(1)}</span>ノット`;
+          }
+        }
+        
+        // 時刻表示のフォーマット変更
+        const timeMatch = loc.timestamp.match(/(\d+):(\d+):(\d+)/);
+        const formattedTime = timeMatch 
+          ? `<span class="time-display">${timeMatch[1]}:${timeMatch[2]}</span> <span class="muted-seconds">${timeMatch[3]}s</span>` 
+          : 'ミュート';
           
         const item = document.createElement('div');
         item.className = 'location-item';
-        item.innerHTML = `${loc.timestamp} - 距離: ${Math.round(displayDistance)} メートル`;
+        
+        let itemContent = `${formattedTime} - 距離: <span class="distance-display">${Math.round(displayDistance)}</span>m`;
+        
+        if (direction) {
+          itemContent += ` - 方位: ${direction}`;
+        }
+        
+        item.innerHTML = itemContent;
+        
+        // 経過時間と平均速度の情報を中央寄せで表示
+        if (timeDiff) {
+          const statsDiv = document.createElement('div');
+          statsDiv.className = 'location-stats';
+          statsDiv.innerHTML = timeDiff;
+          item.appendChild(statsDiv);
+        }
+        
         savedLocationsListElem.appendChild(item);
       });
     }
