@@ -105,7 +105,6 @@
     }
     .location-item {
       padding: 5px 0;
-      border-bottom: 1px solid #eee;
     }
     .location-stats {
       text-align: center;
@@ -563,11 +562,13 @@
         const item = document.createElement('div');
         item.className = 'location-item';
         
+        /*
         // インデックスを表示
         const indexDiv = document.createElement('div');
         indexDiv.className = 'location-index';
         indexDiv.innerHTML = `地点 ${index + 1}`;
         item.appendChild(indexDiv);
+        */
         
         if (index === 0) {
           const currentStatsDiv = document.createElement('div');
@@ -611,6 +612,10 @@
         basicInfoDiv.innerHTML = `${formattedTime} - 距離: <span class="distance-display">${Math.round(displayDistance)}</span>m - 方位: ${direction}`;
         item.appendChild(basicInfoDiv);
         
+        // 区切り線を追加
+        const separator = document.createElement('hr');
+        item.appendChild(separator);
+                
         // 前の地点との比較情報（2つ目以降の地点のみ）
         if (index < savedLocations.length - 1) {
           const prevLoc = savedLocations[index + 1];
@@ -635,10 +640,6 @@
           }
         }
 
-        // 区切り線を追加
-        const separator = document.createElement('hr');
-        item.appendChild(separator);
-                
         savedLocationsListElem.appendChild(item);
       });
     }
