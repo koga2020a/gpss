@@ -519,10 +519,6 @@
         let timeDiff = '';
         let currentStats = '';
         
-        if(!currentPosition)
-      {
-        console.log("currentPosition is null");
-      }
         if (currentPosition) {
           // 現在位置からの距離を計算
           displayDistance = haversineDistance(
@@ -557,7 +553,7 @@
               // 現在位置との情報を追加
               const minutes = Math.floor(timeElapsedCurrent);
               const seconds = Math.round((timeElapsedCurrent - minutes) * 60);
-              currentStats = `<span class="minutes-value">${minutes.toString().padStart(3, '0')}分T ${seconds.toString().padStart(2, '0')}s</span>経過 - 平均: <span class="speed-value">${currentSpeedKnots.toFixed(1)}</span>ノット`;
+              currentStats = `<span class="minutes-value">${minutes.toString().padStart(3, '0')}分 ${seconds.toString().padStart(2, '0')}s</span>経過 - 平均: <span class="speed-value">${currentSpeedKnots.toFixed(1)}</span>ノット`;
             }
           }
         } else {
@@ -590,7 +586,7 @@
               const currentSpeedMps = displayDistance / (timeElapsedCurrent * 60); // m/s
               const currentSpeedKnots = convertToKnots(currentSpeedMps);
               
-              currentStatsDiv.innerHTML = `<span class="minutes-value">${minutes.toString().padStart(3, '0')}分 ${seconds.toString().padStart(2, '0')}s</span>経過 - 平均: <span class="speed-value">${currentSpeedKnots.toFixed(1)}</span>ノット`;
+              currentStatsDiv.innerHTML = `<span class="minutes-value">${minutes.toString().padStart(3, '0')}</span>分 <span class="minutes-value">${seconds.toString().padStart(2, '0')}</span>s 経過 - 平均: <span class="speed-value">${currentSpeedKnots.toFixed(1)}</span>ノット`;
             }
           }
           
