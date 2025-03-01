@@ -722,6 +722,9 @@
 
     // ページ読み込み時に初期化
     document.addEventListener('DOMContentLoaded', () => {
+      // この部分を削除します。すでにグローバルスコープで定義されているため、
+      // 重複してイベントリスナーが登録されています
+      /*
       const statusElem = document.getElementById('status');
       const speedDisplayElem = document.getElementById('speedDisplay');
       const speedDisplayContainerElem = document.getElementById('speedDisplayContainer');
@@ -741,6 +744,7 @@
           }
         }
       });
+      */
 
       // アプリ起動時に自動で開始
       initialize();
