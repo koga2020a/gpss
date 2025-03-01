@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GPS速度アプリ</title>
+  <title>GPS速度voiceアプリ</title>
   <style>
     /* シンプルで使いやすいモバイル向けスタイル */
     body {
@@ -537,7 +537,7 @@
           
           // 距離が0mの場合は方位を「－」と表示
           direction = Math.round(displayDistance) === 0 ? "－" : 
-                     `<span class="direction-display">${Math.round(bearing).toString().padStart(3, '0')}</span> ${bearingToDirection(bearing)}`;
+                     `${bearingToDirection(bearing)} <span class="direction-display">${Math.round(bearing).toString().padStart(3, '0')}</span>`;
           
           // 最新の記録のみ、現在位置との時間差と平均速度を計算
           if (index === 0) {
@@ -603,7 +603,7 @@
         let formattedTime;
         
         if (timeMatch) {
-          formattedTime = `<span class="${index === 0 ? 'latest-time-display' : 'time-display'}">${timeMatch[1]}:${timeMatch[2]}</span> <span class="muted-seconds">${timeMatch[3]}s</span>`;
+          formattedTime = `<span class="${index === 0 ? 'time-display'/*'latest-time-display'*/ : 'time-display'}">${timeMatch[1]}:${timeMatch[2]}</span> <span class="muted-seconds">${timeMatch[3]}s</span>`;
         } else {
           formattedTime = loc.timestamp || '不明';
         }
