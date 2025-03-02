@@ -374,19 +374,27 @@
         isAudioInitialized = true;
         
         // 定期的に音声を再生するタイマーを設定
-        announceIntervalId = setInterval(() => {
-          if (currentPosition && lastAnnouncedPosition) {
-            const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
-            const speedKnots = convertToKnots(speedMps);
-            const smoothedSpeed = getSmoothedSpeed(speedKnots);
-            updateSpeedDisplay(smoothedSpeed);
-            
-            // スムージングされた速度がnullでない場合のみ発話
-            if (smoothedSpeed !== null) {
-              //speakSpeed(smoothedSpeed);
+        if (announceIntervalId) {
+          clearInterval(announceIntervalId);
+        }
+        
+        if (intervalSeconds !== null) {
+          announceIntervalId = setInterval(() => {
+            if (currentPosition && lastAnnouncedPosition) {
+              const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+              const speedKnots = convertToKnots(speedMps);
+              const smoothedSpeed = getSmoothedSpeed(speedKnots);
+              updateSpeedDisplay(smoothedSpeed);
+              
+              // スムージングされた速度がnullでない場合のみ発話
+              if (smoothedSpeed !== null) {
+                speakSpeed(smoothedSpeed);
+                // 次回の計算用に現在の位置を記録
+                lastAnnouncedPosition = currentPosition;
+              }
             }
-          }
-        }, intervalSeconds * 1000);
+          }, intervalSeconds * 1000);
+        }
       }
     }
 
@@ -439,16 +447,18 @@
         // スムージングされた速度で表示と発話を行う
         updateSpeedDisplay(smoothedSpeed);
         
+        // 次回の計算用に現在の位置を記録（発話の前に更新）
+        if (currentPosition) {
+          lastAnnouncedPosition = currentPosition;
+        }
+        
         // 前回の発話から7秒以内の場合はスキップ
         const now = Date.now();
         if (now - lastSpeechTime < MIN_SPEECH_INTERVAL) {
+          // スキップ
         } else {
           speakSpeed(smoothedSpeed);
         }
-      }
-      // 次回の計算用に現在の位置を記録
-      if (currentPosition) {
-        lastAnnouncedPosition = currentPosition;
       }
     }
 
@@ -497,11 +507,29 @@
       intervalDisplayElem.textContent = intervalSeconds === null ? "ミュート" : intervalSeconds + "s";
       saveIntervalToStorage();
       
+      // 既存のタイマーをクリア
       if (announceIntervalId) {
         clearInterval(announceIntervalId);
-        if (intervalSeconds !== null) {
-          announceIntervalId = setInterval(announceCurrentSpeed, intervalSeconds * 1000);
-        }
+        announceIntervalId = null;
+      }
+      
+      // 新しいインターバルでタイマーを再設定（ミュートでない場合のみ）
+      if (intervalSeconds !== null && isAudioInitialized) {
+        announceIntervalId = setInterval(() => {
+          if (currentPosition && lastAnnouncedPosition) {
+            const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+            const speedKnots = convertToKnots(speedMps);
+            const smoothedSpeed = getSmoothedSpeed(speedKnots);
+            updateSpeedDisplay(smoothedSpeed);
+            
+            // スムージングされた速度がnullでない場合のみ発話
+            if (smoothedSpeed !== null) {
+              speakSpeed(smoothedSpeed);
+              // 次回の計算用に現在の位置を記録
+              lastAnnouncedPosition = currentPosition;
+            }
+          }
+        }, intervalSeconds * 1000);
       }
     }
 
@@ -563,6 +591,43 @@
         savedLocations.pop();
       }
       
+      // 既存の保存地点がある場合、各地点から現在位置までの距離と方位を計算して更新
+      for (let i = 1; i < savedLocations.length; i++) {
+        const loc = savedLocations[i];
+        
+        // 距離を計算
+        const distanceFromCurrent = haversineDistance(
+          currentPosition.coords.latitude,
+          currentPosition.coords.longitude,
+          loc.latitude,
+          loc.longitude
+        );
+        
+        // 方位角と方位を計算
+        const bearingFromCurrent = calculateBearing(
+          loc.latitude,
+          loc.longitude,
+          currentPosition.coords.latitude,
+          currentPosition.coords.longitude
+        );
+        
+        // 距離が0mの場合は方位を「－」と表示
+        const directionText = Math.round(distanceFromCurrent) === 0 ? "－" : 
+                   `${bearingToDirection(bearingFromCurrent)} ${Math.round(bearingFromCurrent).toString().padStart(3, '0')}`;
+        
+        // 保存された情報を更新
+        loc.savedDistance = distanceFromCurrent;
+        loc.savedBearing = bearingFromCurrent;
+        loc.savedDirection = directionText;
+        
+        // 表示用の情報も更新
+        loc.displayInfo = {
+          formattedTime: loc.displayInfo ? loc.displayInfo.formattedTime : '',
+          distance: `<span class="distance-display">${Math.round(distanceFromCurrent)}</span>m`,
+          direction: `方位: <span class="direction-display">${directionText}</span>`
+        };
+      }
+      
       updateSavedLocationsList();
       saveLocationsToStorage(); // 保存後にローカルストレージに保存
     }
@@ -578,29 +643,30 @@
         let timeDiff = '';
         let currentStats = '';
         
-        if (index === 0 && currentPosition) {
-          // 現在位置からの距離を計算
-          displayDistance = haversineDistance(
-            currentPosition.coords.latitude, 
-            currentPosition.coords.longitude,
-            loc.latitude, 
-            loc.longitude
-          );
-          
-          // 方位角と方位を計算
-          bearing = calculateBearing(
-            currentPosition.coords.latitude,
-            currentPosition.coords.longitude,
-            loc.latitude,
-            loc.longitude
-          );
-          
-          // 距離が0mの場合は方位を「－」と表示
-          direction = Math.round(displayDistance) === 0 ? "－" : 
-                     `${bearingToDirection(bearing)} <span class="direction-display">${Math.round(bearing).toString().padStart(3, '0')}</span>`;
-          
-          // 最新の記録のみ、現在位置との時間差と平均速度を計算
+        if (currentPosition) {
+          // インデックス0（最新の地点）の場合のみ現在位置からリアルタイムで距離・方位を計算
           if (index === 0) {
+            // 現在位置からの距離を計算
+            displayDistance = haversineDistance(
+              currentPosition.coords.latitude, 
+              currentPosition.coords.longitude,
+              loc.latitude, 
+              loc.longitude
+            );
+            
+            // 方位角と方位を計算
+            bearing = calculateBearing(
+              currentPosition.coords.latitude,
+              currentPosition.coords.longitude,
+              loc.latitude,
+              loc.longitude
+            );
+            
+            // 距離が0mの場合は方位を「－」と表示
+            direction = Math.round(displayDistance) === 0 ? "－" : 
+                       `${bearingToDirection(bearing)} <span class="direction-display">${Math.round(bearing).toString().padStart(3, '0')}</span>`;
+            
+            // 最新の記録のみ、現在位置との時間差と平均速度を計算
             const currentTime = new Date().getTime();
             const timeElapsedCurrent = (currentTime - loc.time) / (1000 * 60); // 分単位
             
@@ -614,9 +680,14 @@
               const seconds = Math.round((timeElapsedCurrent - minutes) * 60);
               currentStats = `<span class="minutes-value">${minutes.toString().padStart(3, '0')}分 ${seconds.toString().padStart(2, '0')}s</span>経過 - 平均: <span class="speed-value">${currentSpeedKnots.toFixed(1)}</span>ノット`;
             }
+          } else {
+            // インデックス1以降（古い地点）の場合は保存された距離・方位を使用
+            displayDistance = loc.savedDistance || 0;
+            direction = loc.savedDirection || '';
           }
         } else {
           displayDistance = loc.savedDistance || 0;
+          direction = loc.savedDirection || '';
         }
         
         const item = document.createElement('div');
@@ -669,7 +740,14 @@
         }
         
         const basicInfoDiv = document.createElement('div');
-        basicInfoDiv.innerHTML = `${formattedTime} - 距離: <span class="distance-display">${Math.round(displayDistance)}</span>m - 方位: ${direction}`;
+        
+        // 方位表示部分を修正
+        let directionDisplay = direction;
+        if (index > 0 && loc.savedDirection) {
+          directionDisplay = `${loc.savedDirection}`;
+        }
+        
+        basicInfoDiv.innerHTML = `${formattedTime} - 距離: <span class="distance-display">${Math.round(displayDistance)}</span>m - 方位: <span class="direction-display">${directionDisplay}</span>`;
         item.appendChild(basicInfoDiv);
         
         // 区切り線を追加
@@ -717,7 +795,26 @@
         // 初回の速度計算と発話
         announceCurrentSpeed();
         // 定期的な発話を開始
-        announceIntervalId = setInterval(announceCurrentSpeed, intervalSeconds * 1000);
+        if (intervalSeconds !== null) {
+          if (announceIntervalId) {
+            clearInterval(announceIntervalId);
+          }
+          announceIntervalId = setInterval(() => {
+            if (currentPosition && lastAnnouncedPosition) {
+              const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+              const speedKnots = convertToKnots(speedMps);
+              const smoothedSpeed = getSmoothedSpeed(speedKnots);
+              updateSpeedDisplay(smoothedSpeed);
+              
+              // スムージングされた速度がnullでない場合のみ発話
+              if (smoothedSpeed !== null) {
+                speakSpeed(smoothedSpeed);
+                // 次回の計算用に現在の位置を記録
+                lastAnnouncedPosition = currentPosition;
+              }
+            }
+          }, intervalSeconds * 1000);
+        }
       }
       
       // リアルタイムで速度を更新
