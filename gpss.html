@@ -104,7 +104,19 @@
       padding-top: 10px;
     }
     .location-item {
+      position: relative;
       padding: 5px 0;
+      touch-action: pan-y pinch-zoom;
+      transition: transform 0.3s ease-out;
+      background: #fff;
+    }
+    .location-item.swiping {
+      cursor: grabbing;
+    }
+    .location-item.will-delete {
+      background: #ffebee;
+      transform: translateX(100px);
+      opacity: 0.5;
     }
     .location-stats {
       text-align: center;
@@ -194,10 +206,11 @@
   </style>
   <!-- ResponsiveVoice.jsを追加 -->
   <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_API_KEY"></script>
-  <!-- Google Maps APIを追加 -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+  <!-- Google Maps APIの参照を削除 -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Hammer.jsを追加 -->
+  <script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -693,13 +706,56 @@
         const item = document.createElement('div');
         item.className = 'location-item';
         
-        /*
-        // インデックスを表示
-        const indexDiv = document.createElement('div');
-        indexDiv.className = 'location-index';
-        indexDiv.innerHTML = `地点 ${index + 1}`;
-        item.appendChild(indexDiv);
-        */
+        // スワイプ中かどうかを示すフラグ
+        let isSwiping = false;
+        
+        // Hammer.jsでスワイプ処理を追加
+        const hammer = new Hammer(item);
+        hammer.on('panstart panright panend', (ev) => {
+          if (ev.type === 'panstart') {
+            isSwiping = true;
+          } else if (ev.type === 'panright') {
+            const deltaX = Math.min(Math.max(ev.deltaX, 0), 400);
+            item.style.transform = `translateX(${deltaX}px)`;
+            item.classList.add('swiping');
+            
+            if (deltaX > 400) {
+              item.classList.add('will-delete');
+            } else {
+              item.classList.remove('will-delete');
+            }
+          } else if (ev.type === 'panend') {
+            item.classList.remove('swiping');
+            if (ev.deltaX > 400) {
+              // 削除アニメーション
+              item.style.transform = 'translateX(100%)';
+              item.style.opacity = '0';
+              setTimeout(() => {
+                // 配列から要素を削除
+                savedLocations.splice(index, 1);
+                saveLocationsToStorage();
+                updateSavedLocationsList();
+              }, 300);
+            } else {
+              // 元の位置に戻す
+              item.style.transform = 'translateX(0)';
+              item.classList.remove('will-delete');
+            }
+            // スワイプ終了後、少し待ってからフラグをリセット
+            setTimeout(() => {
+              isSwiping = false;
+            }, 100);
+          }
+        });
+        
+        // クリックイベントハンドラを修正
+        item.addEventListener('click', () => {
+          // スワイプ中でない場合のみ地図を表示
+          if (!isSwiping) {
+            const location = savedLocations[index];
+            showMap(location.latitude, location.longitude);
+          }
+        });
         
         if (index === 0) {
           const currentStatsDiv = document.createElement('div');
@@ -877,95 +933,84 @@
       }
     });
 
-    // ページ読み込み時に初期化
-    document.addEventListener('DOMContentLoaded', () => {
-      // この部分を削除します。すでにグローバルスコープで定義されているため、
-      // 重複してイベントリスナーが登録されています
-      /*
-      const statusElem = document.getElementById('status');
-      const speedDisplayElem = document.getElementById('speedDisplay');
-      const speedDisplayContainerElem = document.getElementById('speedDisplayContainer');
-      const intervalDisplayElem = document.getElementById('intervalDisplay');
-      const intervalDisplayContainerElem = document.getElementById('intervalDisplayContainer');
-      const hereButton = document.getElementById('hereButton');
-      const savedLocationsListElem = document.getElementById('savedLocationsList');
-      const savedLocationsTitle = document.getElementById('savedLocationsTitle');
+    // グローバルスコープでマップ関連の変数を定義
+    let map = null;
+    let mapModal = null;
+    let mapElement = null;
 
-      // イベントリスナーの設定
-      intervalDisplayContainerElem.addEventListener('click', toggleInterval);
-      hereButton.addEventListener('click', saveCurrentLocation);
-      savedLocationsTitle.addEventListener('click', () => {
-        if (savedLocations.length > 0) {
-          if (confirm('履歴を削除しますか？')) {
-            clearSavedLocations();
-          }
-        }
+    // マップを表示する関数をグローバルスコープで定義
+    function showMap(lat, lng) {
+      if (!mapModal) {
+        mapModal = document.getElementById('mapModal');
+      }
+      if (!mapElement) {
+        mapElement = document.getElementById('map');
+      }
+      
+      mapModal.style.display = 'block';
+      
+      // 既存のマップがある場合は削除
+      if (map) {
+        map.remove();
+        map = null;
+      }
+      
+      // 新しいマップを作成
+      map = L.map(mapElement).setView([lat, lng], 12);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // 現在の位置を最初に追加
+      const latlngs = [];
+      if (currentPosition) {
+        latlngs.push([currentPosition.coords.latitude, currentPosition.coords.longitude]);
+        L.marker([currentPosition.coords.latitude, currentPosition.coords.longitude]).addTo(map)
+          .bindPopup("現在位置");
+      }
+
+      // 各地点にマーカーを追加
+      savedLocations.forEach(location => {
+        latlngs.push([location.latitude, location.longitude]);
+        L.marker([location.latitude, location.longitude]).addTo(map)
+          .bindPopup(location.timestamp);
       });
-      */
 
-      // アプリ起動時に自動で開始
-      initialize();
-    });
+      // 地点を結ぶ線を描画
+      if (latlngs.length > 1) {
+        L.polyline(latlngs, { color: 'blue' }).addTo(map);
+      }
+
+      // マップが表示された後にinvalidateSizeを呼び出す
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+    }
 
     // マップを初期化する関数
     function initMap() {
-      const mapModal = document.getElementById('mapModal');
-      const closeMapBtn = document.getElementById('closeMapBtn');
-      const mapElement = document.getElementById('map');
-
-      function showMap(lat, lng) {
-        mapModal.style.display = 'block';
-        const map = L.map(mapElement).setView([lat, lng], 12);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        // 現在の位置を最初に追加
-        const latlngs = [];
-        if (currentPosition) {
-          latlngs.push([currentPosition.coords.latitude, currentPosition.coords.longitude]);
-          L.marker([currentPosition.coords.latitude, currentPosition.coords.longitude]).addTo(map)
-            .bindPopup("現在位置");
-        }
-
-        // 各地点にマーカーを追加
-        savedLocations.forEach(location => {
-          latlngs.push([location.latitude, location.longitude]);
-          L.marker([location.latitude, location.longitude]).addTo(map)
-            .bindPopup(location.timestamp);
-        });
-
-        // 地点を結ぶ線を描画
-        if (latlngs.length > 1) {
-          L.polyline(latlngs, { color: 'blue' }).addTo(map);
-        }
+      if (!mapModal) {
+        mapModal = document.getElementById('mapModal');
       }
+      const closeMapBtn = document.getElementById('closeMapBtn');
 
       function closeMap() {
         mapModal.style.display = 'none';
+        if (map) {
+          map.remove();
+          map = null;
+        }
       }
 
       closeMapBtn.addEventListener('click', closeMap);
-
-      // 各地点のクリックイベントを設定
-      savedLocationsListElem.addEventListener('click', (event) => {
-        const target = event.target.closest('.location-item');
-        if (target) {
-          const index = Array.from(savedLocationsListElem.children).indexOf(target);
-          if (index !== -1) {
-            const location = savedLocations[index];
-            showMap(location.latitude, location.longitude);
-          }
-        }
-      });
     }
 
     // ページ読み込み時に初期化
     document.addEventListener('DOMContentLoaded', () => {
       initialize();
-      initMap(); // マップの初期化を追加
+      initMap(); // マップの初期化
     });
   </script>
 </body>
