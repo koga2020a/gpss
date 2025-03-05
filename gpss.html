@@ -107,7 +107,7 @@
       position: relative;
       padding: 5px 0;
       touch-action: pan-y pinch-zoom;
-      transition: transform 0.3s ease-out;
+      transition: transform 0.3s ease-out, background-color 0.3s ease-out;
       background: #fff;
     }
     .location-item.swiping {
@@ -117,6 +117,32 @@
       background: #ffebee;
       transform: translateX(100px);
       opacity: 0.5;
+    }
+    /* 削除アイコンのコンテナ */
+    .delete-icon {
+      position: fixed;
+      right: calc(50% - 250px + 20px); /* containerの右端から20px */
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0;
+      transition: opacity 0.3s ease-out;
+      color: #fff;
+      background: #ff3b30;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    @media (max-width: 540px) {
+      .delete-icon {
+        right: 20px; /* 画面幅が狭い場合は右端から20px */
+      }
+    }
+    .location-item.will-delete .delete-icon {
+      opacity: 1;
     }
     .location-stats {
       text-align: center;
@@ -714,27 +740,33 @@
         const item = document.createElement('div');
         item.className = 'location-item';
         
+        // ゴミ箱アイコンを追加
+        const deleteIcon = document.createElement('div');
+        deleteIcon.className = 'delete-icon';
+        deleteIcon.innerHTML = '🗑️';
+        item.appendChild(deleteIcon);
+        
         // スワイプ中かどうかを示すフラグ
         let isSwiping = false;
         
         // Hammer.jsでスワイプ処理を追加
         const hammer = new Hammer(item);
-        hammer.on('panstart panright panend', (ev) => {
+        hammer.on('panstart panmove panend', (ev) => {
           if (ev.type === 'panstart') {
             isSwiping = true;
-          } else if (ev.type === 'panright') {
+          } else if (ev.type === 'panmove') {
             const deltaX = Math.min(Math.max(ev.deltaX, 0), 400);
             item.style.transform = `translateX(${deltaX}px)`;
             item.classList.add('swiping');
             
-            if (deltaX > 400) {
+            if (deltaX > 100) {
               item.classList.add('will-delete');
             } else {
               item.classList.remove('will-delete');
             }
           } else if (ev.type === 'panend') {
             item.classList.remove('swiping');
-            if (ev.deltaX > 400) {
+            if (ev.deltaX > 100) {
               // 削除アニメーション
               item.style.transform = 'translateX(100%)';
               item.style.opacity = '0';
