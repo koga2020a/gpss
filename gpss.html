@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GPS速度voiceアプリ</title>
+  <!-- Supabase Client の追加 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     /* シンプルで使いやすいモバイル向けスタイル */
     :root {
@@ -305,6 +307,7 @@
   </div>
   
   <script>
+    // グローバル変数の定義
     let watchId;
     let currentPosition = null;
     let lastAnnouncedPosition = null;
@@ -312,19 +315,126 @@
     let intervalSeconds = 30;
     let savedLocations = [];
     const MAX_SAVED_LOCATIONS = 5;
-    // 速度値の履歴を保存する配列
     let speedHistory = [];
     const MAX_SPEED_HISTORY = 5;
-    // 発話ログの最大保持数
     const MAX_SPEECH_LOG = 10;
-    // 発話履歴の配列
     let speechHistory = [];
-    // 前回の発話時刻を保存する変数
     let lastSpeechTime = 0;
-    // 発話間の最小間隔（ミリ秒）
     const MIN_SPEECH_INTERVAL = 7000;
-    // 間隔の設定値（秒）
     const INTERVAL_VALUES = [null, 10, 30, 50, 120, 240];
+
+    // Supabaseの初期化を行う関数
+    async function initializeSupabase() {
+      const SUPABASE_URL = 'https://ylsoibodesucxrxofuir.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlsc29pYm9kZXN1Y3hyeG9mdWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE1MTA5MzAsImV4cCI6MjA1NzA4NjkzMH0.keB3IujuD-9-398opVDmChBETN0DhNy4u2iaQKdbGtU';
+      
+      try {
+        return supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } catch (error) {
+        console.error('Supabase initialization failed:', error);
+        return null;
+      }
+    }
+
+    // Supabaseクライアントの初期化とリトライ
+    let supabaseClient = null;
+    async function setupSupabaseClient() {
+      supabaseClient = await initializeSupabase();
+      if (!supabaseClient) {
+        console.log('Supabase client initialization failed. Retrying in 5 seconds...');
+        setTimeout(setupSupabaseClient, 5000); // 5秒後に再試行
+      }
+    }
+
+    // 初期化を実行
+    setupSupabaseClient();
+
+    // レース情報
+    let raceUuid = null;
+    let racePassword = null;
+    
+    // オフラインキュー
+    let offlineQueue = [];
+    const OFFLINE_QUEUE_KEY = 'gpsOfflineQueue';
+
+    // URLパラメータからレース情報を取得
+    function getRaceInfoFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      raceUuid = urlParams.get('race');
+      racePassword = urlParams.get('pwd');
+      return raceUuid && racePassword;
+    }
+
+    // オフラインキューの保存
+    function saveOfflineQueue() {
+      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(offlineQueue));
+    }
+
+    // オフラインキューの読み込み
+    function loadOfflineQueue() {
+      const saved = localStorage.getItem(OFFLINE_QUEUE_KEY);
+      if (saved) {
+        offlineQueue = JSON.parse(saved);
+      }
+    }
+
+    // Supabaseにデータを送信する関数
+    async function sendToSupabase(data) {
+      if (!supabaseClient) {
+        console.error('Supabase client is not initialized.');
+        return false;
+      }
+
+      if (!raceUuid || !racePassword) return;
+
+      try {
+        const { data: result, error } = await supabaseClient
+          .rpc('insert_race_tracking', {
+            p_race_uuid: raceUuid,
+            p_race_password: racePassword,
+            p_latitude: data.coords.latitude,
+            p_longitude: data.coords.longitude,
+            p_timestamp: new Date(data.timestamp).toISOString(),
+            p_accuracy: data.coords.accuracy,
+            p_altitude: data.coords.altitude,
+            p_altitude_accuracy: data.coords.altitudeAccuracy,
+            p_heading: data.coords.heading,
+            p_speed: data.coords.speed
+          });
+
+        if (error || !result.success) {
+          console.error('Supabase error:', error || result.error);
+          return false;
+        }
+        return true;
+      } catch (e) {
+        console.error('Network error:', e);
+        return false;
+      }
+    }
+
+    // オフラインキューの処理
+    async function processOfflineQueue() {
+      if (!navigator.onLine || offlineQueue.length === 0) return;
+
+      const successfulUploads = [];
+      
+      for (let i = 0; i < offlineQueue.length; i++) {
+        const success = await sendToSupabase(offlineQueue[i]);
+        if (success) {
+          successfulUploads.push(i);
+        } else {
+          break; // 送信に失敗したら処理を中断
+        }
+      }
+
+      // 成功したデータをキューから削除
+      offlineQueue = offlineQueue.filter((_, index) => !successfulUploads.includes(index));
+      saveOfflineQueue();
+    }
+
+    // オンライン状態の監視
+    window.addEventListener('online', processOfflineQueue);
 
     const statusElem = document.getElementById('status');
     const speedDisplayElem = document.getElementById('speedDisplay');
@@ -914,6 +1024,21 @@
     // 位置情報の更新時に呼ばれる関数
     function handlePositionUpdate(pos) {
       currentPosition = pos;
+      
+      // レース情報が設定されている場合、Supabaseに送信を試みる
+      if (raceUuid && racePassword) {
+        if (navigator.onLine) {
+          sendToSupabase(pos).catch(err => {
+            console.error('Failed to send data:', err);
+            offlineQueue.push(pos);
+            saveOfflineQueue();
+          });
+        } else {
+          offlineQueue.push(pos);
+          saveOfflineQueue();
+        }
+      }
+
       statusElem.innerHTML = 
                            "緯度: " + pos.coords.latitude.toFixed(5).padStart(9, '0') + "<br>" +
                            "経度: " + pos.coords.longitude.toFixed(5).padStart(9, '0');
@@ -979,6 +1104,11 @@
       
       loadIntervalFromStorage(); // 秒数をロード
       loadSavedLocationsFromStorage(); // 保存した地点をロード
+      loadOfflineQueue(); // オフラインキューをロード
+      getRaceInfoFromUrl(); // レース情報を取得
+
+      // オフラインキューの処理を試みる
+      processOfflineQueue();
 
       // 高精度で位置情報を取得（watchPositionで継続的に更新）
       watchId = navigator.geolocation.watchPosition(
@@ -986,7 +1116,11 @@
         (err) => {
           statusElem.textContent = "エラー: " + err.message;
         },
-        { enableHighAccuracy: true }
+        { 
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 5000
+        }
       );
     }
 
