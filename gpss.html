@@ -277,7 +277,7 @@
       border-radius: 4px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       z-index: 1000;
-      display: none;
+      display: block; /* noneからblockに変更して初期表示されるようにする */
     }
 
     .speed-legend-gradient {
@@ -298,7 +298,7 @@
     .map-toggle-container {
       position: absolute;
       top: 10px;
-      left: 10px;
+      left: 50px; /* 左から10pxを50pxに変更して右に40pxずらす */
       z-index: 1000;
       background-color: var(--container-background);
       border-radius: 4px;
@@ -404,9 +404,7 @@
       
       <!-- マップ表示切替ボタン -->
       <div class="map-toggle-container">
-        <button class="map-toggle-btn active" id="toggleNormal">通常</button>
-        <button class="map-toggle-btn" id="toggleSpeed">速度</button>
-        <button class="map-toggle-btn" id="toggleSatellite">衛星</button>
+        <button class="map-toggle-btn active" id="toggleMapMode">速度</button>
       </div>
       
       <!-- 速度凡例 -->
@@ -1303,25 +1301,22 @@
     let mapModal = null;
     let mapElement = null;
     let isTrackingMode = false;
-    let currentMapMode = 'normal'; // normal, speed, satellite
+    let currentMapMode = 'speed'; // speed, satellite
     let speedSegments = []; // 速度データのセグメント
     let speedPolylines = []; // 速度表示用のポリライン配列
 
     // マップ表示を切り替える関数
-    function switchMapMode(mode) {
-      currentMapMode = mode;
+    function switchMapMode() {
+      // 現在のモードを切り替える
+      currentMapMode = currentMapMode === 'speed' ? 'satellite' : 'speed';
       
-      // 全てのボタンから active クラスを削除
-      document.querySelectorAll('.map-toggle-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      
-      // 選択されたボタンに active クラスを追加
-      document.getElementById(`toggle${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
+      // ボタンのテキストを更新
+      const toggleBtn = document.getElementById('toggleMapMode');
+      toggleBtn.textContent = currentMapMode === 'speed' ? '速度' : '衛星';
       
       // 速度凡例の表示/非表示
       const speedLegend = document.getElementById('speedLegend');
-      speedLegend.style.display = mode === 'speed' ? 'block' : 'none';
+      speedLegend.style.display = currentMapMode === 'speed' ? 'block' : 'none';
       
       if (map) {
         // 既存のタイルレイヤーを削除
@@ -1332,7 +1327,7 @@
         });
         
         // 選択されたモードに基づいてタイルレイヤーを追加
-        if (mode === 'satellite') {
+        if (currentMapMode === 'satellite') {
           L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
           }).addTo(map);
@@ -1346,7 +1341,7 @@
         // 速度表示の切替
         speedPolylines.forEach(polyline => {
           polyline.setStyle({
-            opacity: mode === 'speed' ? 0.8 : 0
+            opacity: currentMapMode === 'speed' ? 0.8 : 0
           });
         });
         
@@ -1354,13 +1349,13 @@
         map.eachLayer(layer => {
           if (layer._detailedPath) {
             layer.setStyle({
-              opacity: mode === 'speed' ? 0.8 : 0
+              opacity: currentMapMode === 'speed' ? 0.8 : 0
             });
           }
         });
         
         // 速度モードの場合は詳細経路を更新
-        if (mode === 'speed') {
+        if (currentMapMode === 'speed') {
           updateDetailedPathOnMap();
         }
       }
@@ -1438,6 +1433,12 @@
         imperial: false,  // メートル法のみを表示
         position: 'bottomright'
       }).addTo(map);
+
+      // 速度凡例の表示（初期表示時に確実に表示されるようにする）
+      const speedLegend = document.getElementById('speedLegend');
+      if (speedLegend && currentMapMode === 'speed') {
+        speedLegend.style.display = 'block';
+      }
 
       // 現在位置のカスタムアイコン
       const currentPositionIcon = L.divIcon({
@@ -1618,9 +1619,7 @@
     // マップのイベントリスナーを設定
     function setupMapEventListeners() {
       // マップ表示切替ボタン
-      document.getElementById('toggleNormal').addEventListener('click', () => switchMapMode('normal'));
-      document.getElementById('toggleSpeed').addEventListener('click', () => switchMapMode('speed'));
-      document.getElementById('toggleSatellite').addEventListener('click', () => switchMapMode('satellite'));
+      document.getElementById('toggleMapMode').addEventListener('click', switchMapMode);
       
       // 追跡モードボタン
       document.getElementById('trackModeBtn').addEventListener('click', toggleTrackingMode);
@@ -1646,65 +1645,6 @@
         
         // 詳細な経路情報を更新
         if (currentMapMode === 'speed') {
-          updateDetailedPathOnMap();
-        }
-      }
-    }
-
-    // マップ表示を切り替える関数
-    function switchMapMode(mode) {
-      currentMapMode = mode;
-      
-      // 全てのボタンから active クラスを削除
-      document.querySelectorAll('.map-toggle-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      
-      // 選択されたボタンに active クラスを追加
-      document.getElementById(`toggle${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
-      
-      // 速度凡例の表示/非表示
-      const speedLegend = document.getElementById('speedLegend');
-      speedLegend.style.display = mode === 'speed' ? 'block' : 'none';
-      
-      if (map) {
-        // 既存のタイルレイヤーを削除
-        map.eachLayer(layer => {
-          if (layer instanceof L.TileLayer) {
-            map.removeLayer(layer);
-          }
-        });
-        
-        // 選択されたモードに基づいてタイルレイヤーを追加
-        if (mode === 'satellite') {
-          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-          }).addTo(map);
-        } else {
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          }).addTo(map);
-        }
-        
-        // 速度表示の切替
-        speedPolylines.forEach(polyline => {
-          polyline.setStyle({
-            opacity: mode === 'speed' ? 0.8 : 0
-          });
-        });
-        
-        // 詳細な経路情報の表示/非表示
-        map.eachLayer(layer => {
-          if (layer._detailedPath) {
-            layer.setStyle({
-              opacity: mode === 'speed' ? 0.8 : 0
-            });
-          }
-        });
-        
-        // 速度モードの場合は詳細経路を更新
-        if (mode === 'speed') {
           updateDetailedPathOnMap();
         }
       }
@@ -1842,8 +1782,12 @@
         isTrackingMode = false;
       }
       
-      // マップ表示切替ボタンの初期設定
-      switchMapMode('normal');
+      // マップモードの初期設定
+      currentMapMode = 'speed';
+      const toggleBtn = document.getElementById('toggleMapMode');
+      if (toggleBtn) {
+        toggleBtn.textContent = '速度';
+      }
     }
 
     // ページ読み込み時に初期化
