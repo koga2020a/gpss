@@ -278,6 +278,7 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       z-index: 1000;
       display: block; /* noneからblockに変更して初期表示されるようにする */
+      cursor: pointer; /* クリック可能であることを示す */
     }
 
     .speed-legend-gradient {
@@ -285,6 +286,22 @@
       height: 15px;
       background: linear-gradient(to right, blue, green, red);
       margin-bottom: 5px;
+      position: relative;
+    }
+
+    /* 速度範囲のオーバーレイ */
+    .speed-range-overlay {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.5);
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    /* 明滅アニメーション */
+    @keyframes pulse {
+      0% { opacity: 0.1; }
+      100% { opacity: 0.7; }
     }
 
     .speed-legend-labels {
@@ -294,38 +311,22 @@
       color: var(--text-color);
     }
 
-    /* マップ表示切替ボタンのスタイル */
+    .speed-legend-mode {
+      text-align: center;
+      font-size: 10px;
+      margin-top: 2px;
+      font-weight: bold;
+    }
+
+    /* マップ表示切替ボタンのスタイル - 不要になったため削除 */
     .map-toggle-container {
-      position: absolute;
-      top: 10px;
-      left: 50px; /* 左から10pxを50pxに変更して右に40pxずらす */
-      z-index: 1000;
-      background-color: var(--container-background);
-      border-radius: 4px;
-      padding: 5px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .map-toggle-btn {
-      background: none;
-      border: none;
-      color: var(--text-color);
-      padding: 5px 8px;
-      margin: 0 2px;
-      cursor: pointer;
-      border-radius: 2px;
-      font-size: 12px;
-    }
-
-    .map-toggle-btn.active {
-      background-color: #007aff;
-      color: white;
+      display: none; /* 非表示にする */
     }
 
     /* 現在地追跡ボタン */
     .track-mode-btn {
       position: absolute;
-      bottom: 80px;
+      bottom: 90px;
       right: 10px;
       width: 40px;
       height: 40px;
@@ -359,7 +360,13 @@
       max-width: 200px;
       font-size: 12px;
       color: var(--text-color);
+      cursor: pointer; /* クリック可能であることを示す */
     }
+
+    /* ホバー効果を削除 */
+    /*.map-info-panel:hover {
+      background-color: rgba(0, 122, 255, 0.1);
+    }*/
 
     .map-info-data {
       margin: 4px 0;
@@ -402,7 +409,7 @@
       <div id="map"></div>
       <div class="close-btn" id="closeMapBtn">×</div>
       
-      <!-- マップ表示切替ボタン -->
+      <!-- マップ表示切替ボタン - 非表示にするが、コードの互換性のために残す -->
       <div class="map-toggle-container">
         <button class="map-toggle-btn active" id="toggleMapMode">速度</button>
       </div>
@@ -415,16 +422,15 @@
           <span>5</span>
           <span>10+</span>
         </div>
-        <div style="text-align: center; font-size: 10px; margin-top: 2px;">速度 (ノット)</div>
+        <div class="speed-legend-mode" id="speedLegendMode">速度 (ノット)</div>
       </div>
       
       <!-- 追跡モードボタン -->
       <div class="track-mode-btn" id="trackModeBtn">📍</div>
       
-      <!-- 情報パネル -->
-      <div class="map-info-panel">
+      <!-- 情報パネル - クリックでマップモード切替 -->
+      <div class="map-info-panel" id="mapInfoPanel">
         <div class="map-info-data" id="mapCurrentSpeed">速度: 0.0 ノット</div>
-        <div class="map-info-data" id="mapCurrentAlt">高度: -- m</div>
         <div class="map-info-data" id="mapCurrentHeading">方位: -- °</div>
       </div>
     </div>
@@ -1304,19 +1310,16 @@
     let currentMapMode = 'speed'; // speed, satellite
     let speedSegments = []; // 速度データのセグメント
     let speedPolylines = []; // 速度表示用のポリライン配列
+    let speedFilterMode = 'all'; // 速度フィルターモード: 'all', 'low', 'medium', 'high'
 
     // マップ表示を切り替える関数
     function switchMapMode() {
       // 現在のモードを切り替える
       currentMapMode = currentMapMode === 'speed' ? 'satellite' : 'speed';
       
-      // ボタンのテキストを更新
-      const toggleBtn = document.getElementById('toggleMapMode');
-      toggleBtn.textContent = currentMapMode === 'speed' ? '速度' : '衛星';
-      
-      // 速度凡例の表示/非表示
-      const speedLegend = document.getElementById('speedLegend');
-      speedLegend.style.display = currentMapMode === 'speed' ? 'block' : 'none';
+      // 速度凡例は常に表示（衛星モードでも表示）
+      // const speedLegend = document.getElementById('speedLegend');
+      // speedLegend.style.display = currentMapMode === 'speed' ? 'block' : 'none';
       
       if (map) {
         // 既存のタイルレイヤーを削除
@@ -1338,26 +1341,24 @@
           }).addTo(map);
         }
         
-        // 速度表示の切替
+        // 速度表示の切替 - 衛星モードでも表示するように変更
         speedPolylines.forEach(polyline => {
           polyline.setStyle({
-            opacity: currentMapMode === 'speed' ? 0.8 : 0
+            opacity: 0.8 // 常に表示
           });
         });
         
-        // 詳細な経路情報の表示/非表示
+        // 詳細な経路情報の表示/非表示 - 衛星モードでも表示するように変更
         map.eachLayer(layer => {
           if (layer._detailedPath) {
             layer.setStyle({
-              opacity: currentMapMode === 'speed' ? 0.8 : 0
+              opacity: 0.8 // 常に表示
             });
           }
         });
         
-        // 速度モードの場合は詳細経路を更新
-        if (currentMapMode === 'speed') {
-          updateDetailedPathOnMap();
-        }
+        // 詳細経路を更新 - 衛星モードでも更新するように変更
+        updateDetailedPathOnMap();
       }
     }
 
@@ -1436,8 +1437,9 @@
 
       // 速度凡例の表示（初期表示時に確実に表示されるようにする）
       const speedLegend = document.getElementById('speedLegend');
-      if (speedLegend && currentMapMode === 'speed') {
+      if (speedLegend) {
         speedLegend.style.display = 'block';
+        updateSpeedRangeOverlay(); // 速度範囲のオーバーレイを更新
       }
 
       // 現在位置のカスタムアイコン
@@ -1560,14 +1562,16 @@
       // 速度に基づいた色分け経路
       speedSegments.forEach(segment => {
         const color = getSpeedColor(segment.speed);
+        const visible = isSpeedVisible(segment.speed);
         
         // 色付きの線を描画
         const polyline = L.polyline([segment.start, segment.end], { 
           color: color, 
           weight: 5, 
-          opacity: currentMapMode === 'speed' ? 0.8 : 0,
+          opacity: visible ? 0.8 : 0,
           lineCap: 'round',
           lineJoin: 'round',
+          speed: segment.speed // 速度情報を保存
         }).addTo(map);
         
         polyline.bindPopup(`<strong>速度:</strong> ${segment.speed.toFixed(1)}ノット`);
@@ -1601,12 +1605,7 @@
       const smoothedSpeed = getSmoothedSpeed(speedKnots);
       document.getElementById('mapCurrentSpeed').textContent = `速度: ${smoothedSpeed.toFixed(1)} ノット`;
       
-      // 高度情報
-      if (currentPosition.coords.altitude !== null && currentPosition.coords.altitude !== undefined) {
-        document.getElementById('mapCurrentAlt').textContent = `高度: ${Math.round(currentPosition.coords.altitude)} m`;
-      } else {
-        document.getElementById('mapCurrentAlt').textContent = `高度: -- m`;
-      }
+      // 高度情報は廃止
       
       // 方位情報
       if (currentPosition.coords.heading !== null && currentPosition.coords.heading !== undefined && !isNaN(currentPosition.coords.heading)) {
@@ -1618,17 +1617,18 @@
 
     // マップのイベントリスナーを設定
     function setupMapEventListeners() {
-      // マップ表示切替ボタン
-      document.getElementById('toggleMapMode').addEventListener('click', switchMapMode);
+      // マップ表示切替ボタンの代わりに情報パネルのクリックイベントを設定
+      document.getElementById('mapInfoPanel').addEventListener('click', switchMapMode);
       
       // 追跡モードボタン
       document.getElementById('trackModeBtn').addEventListener('click', toggleTrackingMode);
       
+      // 速度凡例のクリックイベント
+      document.getElementById('speedLegend').addEventListener('click', toggleSpeedFilter);
+      
       // マップ移動時に詳細経路を更新
       map.on('moveend', () => {
-        if (currentMapMode === 'speed') {
-          updateDetailedPathOnMap();
-        }
+        updateDetailedPathOnMap();
       });
     }
 
@@ -1643,10 +1643,8 @@
         // 情報パネルを更新
         updateMapInfoPanel();
         
-        // 詳細な経路情報を更新
-        if (currentMapMode === 'speed') {
-          updateDetailedPathOnMap();
-        }
+        // 詳細な経路情報を更新 - 衛星モードでも更新するように変更
+        updateDetailedPathOnMap();
       }
     }
 
@@ -1726,15 +1724,17 @@
       // 詳細な速度セグメントを地図に表示
       detailedSpeedSegments.forEach(segment => {
         const color = getSpeedColor(segment.speed);
+        const visible = isSpeedVisible(segment.speed);
         
-        // 色付きの線を描画
+        // 色付きの線を描画 - 衛星モードでも表示するように変更
         const polyline = L.polyline([segment.start, segment.end], { 
           color: color, 
           weight: 4, 
-          opacity: currentMapMode === 'speed' ? 0.8 : 0,
+          opacity: visible ? 0.8 : 0, // フィルターに基づいて表示/非表示
           lineCap: 'round',
           lineJoin: 'round',
-          _detailedPath: true // カスタムプロパティで識別
+          _detailedPath: true, // カスタムプロパティで識別
+          speed: segment.speed // 速度情報を保存
         }).addTo(map);
         
         // ポップアップに詳細情報を表示
@@ -1787,6 +1787,120 @@
       const toggleBtn = document.getElementById('toggleMapMode');
       if (toggleBtn) {
         toggleBtn.textContent = '速度';
+      }
+      
+      // 速度フィルターモードの初期設定
+      speedFilterMode = 'all';
+      const speedLegendMode = document.getElementById('speedLegendMode');
+      if (speedLegendMode) {
+        speedLegendMode.textContent = '速度 (ノット)';
+      }
+    }
+
+    // 速度フィルターを切り替える関数
+    function toggleSpeedFilter() {
+      // 速度フィルターモードを切り替え
+      switch (speedFilterMode) {
+        case 'all':
+          speedFilterMode = 'low';
+          document.getElementById('speedLegendMode').textContent = '0-3ノット';
+          break;
+        case 'low':
+          speedFilterMode = 'medium';
+          document.getElementById('speedLegendMode').textContent = '3-6ノット';
+          break;
+        case 'medium':
+          speedFilterMode = 'high';
+          document.getElementById('speedLegendMode').textContent = '6+ノット';
+          break;
+        case 'high':
+          speedFilterMode = 'all';
+          document.getElementById('speedLegendMode').textContent = '速度 (ノット)';
+          break;
+      }
+      
+      // 速度表示を更新
+      updateSpeedDisplay();
+      
+      // 速度範囲のオーバーレイを更新
+      updateSpeedRangeOverlay();
+    }
+    
+    // 速度範囲のオーバーレイを更新する関数
+    function updateSpeedRangeOverlay() {
+      const gradientElement = document.querySelector('.speed-legend-gradient');
+      
+      // 既存のオーバーレイを削除
+      const existingOverlays = document.querySelectorAll('.speed-range-overlay');
+      existingOverlays.forEach(overlay => overlay.remove());
+      
+      // 全表示の場合はオーバーレイを表示しない
+      if (speedFilterMode === 'all') {
+        return;
+      }
+      
+      // 速度範囲に応じたオーバーレイを作成
+      const overlay = document.createElement('div');
+      overlay.className = 'speed-range-overlay';
+      
+      const totalWidth = 150; // グラデーションの幅
+      
+      switch (speedFilterMode) {
+        case 'low':
+          // 0-3ノットの部分を明滅させる
+          overlay.style.left = '0';
+          overlay.style.width = `${3 / 10 * totalWidth}px`;
+          break;
+        case 'medium':
+          // 3-6ノットの部分を明滅させる
+          overlay.style.left = `${3 / 10 * totalWidth}px`;
+          overlay.style.width = `${(6 - 3) / 10 * totalWidth}px`;
+          break;
+        case 'high':
+          // 6-10+ノットの部分を明滅させる
+          overlay.style.left = `${6 / 10 * totalWidth}px`;
+          overlay.style.width = `${(10 - 6) / 10 * totalWidth}px`;
+          break;
+      }
+      
+      gradientElement.appendChild(overlay);
+    }
+    
+    // 速度表示を更新する関数
+    function updateSpeedDisplay() {
+      // 保存された経路の表示を更新
+      speedPolylines.forEach(polyline => {
+        const speed = polyline.options.speed;
+        const visible = isSpeedVisible(speed);
+        polyline.setStyle({
+          opacity: visible ? 0.8 : 0
+        });
+      });
+      
+      // 詳細な経路情報の表示を更新
+      map.eachLayer(layer => {
+        if (layer._detailedPath) {
+          const speed = layer.options.speed;
+          const visible = isSpeedVisible(speed);
+          layer.setStyle({
+            opacity: visible ? 0.8 : 0
+          });
+        }
+      });
+    }
+    
+    // 速度が現在のフィルターで表示すべきかを判定する関数
+    function isSpeedVisible(speed) {
+      switch (speedFilterMode) {
+        case 'low':
+          return speed < 3;
+        case 'medium':
+          return speed >= 3 && speed < 6;
+        case 'high':
+          return speed >= 6;
+        case 'all':
+        default:
+          return true;
       }
     }
 
