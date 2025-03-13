@@ -22,7 +22,7 @@
       --container-background: #2d2d2d;
       --text-color: #ffffff;
       --border-color: #404040;
-      --shadow-color: rgba(0,0,0,0.3);
+      --shadow-color: rgba(0, 0, 0, 0.3);
       --muted-text-color: #aaa;
     }
 
@@ -448,6 +448,12 @@
     let lastSpeechTime = 0;
     const MIN_SPEECH_INTERVAL = 7000;
     const INTERVAL_VALUES = [null, 10, 30, 50, 120, 240];
+    
+    // 速度表示用の詳細な位置情報を保持する配列
+    let detailedPositionHistory = [];
+    const DETAILED_POSITION_INTERVAL = 5000; // 5秒間隔
+    let lastDetailedPositionTime = 0;
+    const MAX_DETAILED_POSITIONS = 100; // 最大保持数
 
     // Supabaseの初期化を行う関数
     async function initializeSupabase() {
@@ -1170,6 +1176,13 @@
         }
       }
 
+      // 詳細な位置情報を5秒間隔で保存
+      const now = Date.now();
+      if (now - lastDetailedPositionTime >= DETAILED_POSITION_INTERVAL) {
+        saveDetailedPosition(pos);
+        lastDetailedPositionTime = now;
+      }
+
       statusElem.innerHTML = 
                            "緯度: " + pos.coords.latitude.toFixed(5).padStart(9, '0') + "<br>" +
                            "経度: " + pos.coords.longitude.toFixed(5).padStart(9, '0');
@@ -1336,6 +1349,20 @@
             opacity: mode === 'speed' ? 0.8 : 0
           });
         });
+        
+        // 詳細な経路情報の表示/非表示
+        map.eachLayer(layer => {
+          if (layer._detailedPath) {
+            layer.setStyle({
+              opacity: mode === 'speed' ? 0.8 : 0
+            });
+          }
+        });
+        
+        // 速度モードの場合は詳細経路を更新
+        if (mode === 'speed') {
+          updateDetailedPathOnMap();
+        }
       }
     }
 
@@ -1546,6 +1573,9 @@
         speedPolylines.push(polyline);
       });
       
+      // 詳細な経路情報を表示
+      updateDetailedPathOnMap();
+      
       // マップが表示された後にinvalidateSizeを呼び出す
       setTimeout(() => {
         map.invalidateSize();
@@ -1594,6 +1624,13 @@
       
       // 追跡モードボタン
       document.getElementById('trackModeBtn').addEventListener('click', toggleTrackingMode);
+      
+      // マップ移動時に詳細経路を更新
+      map.on('moveend', () => {
+        if (currentMapMode === 'speed') {
+          updateDetailedPathOnMap();
+        }
+      });
     }
 
     // 位置情報更新時にマップを更新する関数
@@ -1606,7 +1643,167 @@
         
         // 情報パネルを更新
         updateMapInfoPanel();
+        
+        // 詳細な経路情報を更新
+        if (currentMapMode === 'speed') {
+          updateDetailedPathOnMap();
+        }
       }
+    }
+
+    // マップ表示を切り替える関数
+    function switchMapMode(mode) {
+      currentMapMode = mode;
+      
+      // 全てのボタンから active クラスを削除
+      document.querySelectorAll('.map-toggle-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // 選択されたボタンに active クラスを追加
+      document.getElementById(`toggle${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
+      
+      // 速度凡例の表示/非表示
+      const speedLegend = document.getElementById('speedLegend');
+      speedLegend.style.display = mode === 'speed' ? 'block' : 'none';
+      
+      if (map) {
+        // 既存のタイルレイヤーを削除
+        map.eachLayer(layer => {
+          if (layer instanceof L.TileLayer) {
+            map.removeLayer(layer);
+          }
+        });
+        
+        // 選択されたモードに基づいてタイルレイヤーを追加
+        if (mode === 'satellite') {
+          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+          }).addTo(map);
+        } else {
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }).addTo(map);
+        }
+        
+        // 速度表示の切替
+        speedPolylines.forEach(polyline => {
+          polyline.setStyle({
+            opacity: mode === 'speed' ? 0.8 : 0
+          });
+        });
+        
+        // 詳細な経路情報の表示/非表示
+        map.eachLayer(layer => {
+          if (layer._detailedPath) {
+            layer.setStyle({
+              opacity: mode === 'speed' ? 0.8 : 0
+            });
+          }
+        });
+        
+        // 速度モードの場合は詳細経路を更新
+        if (mode === 'speed') {
+          updateDetailedPathOnMap();
+        }
+      }
+    }
+
+    // 詳細な位置情報を保存する関数
+    function saveDetailedPosition(pos) {
+      // 位置情報と時刻を保存
+      const detailedPosition = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        timestamp: pos.timestamp,
+        speed: pos.coords.speed,
+        heading: pos.coords.heading,
+        altitude: pos.coords.altitude
+      };
+      
+      // 配列の先頭に追加
+      detailedPositionHistory.unshift(detailedPosition);
+      
+      // 最大保持数を超えた場合、古いデータを削除
+      if (detailedPositionHistory.length > MAX_DETAILED_POSITIONS) {
+        detailedPositionHistory.pop();
+      }
+      
+      // マップが表示されている場合は更新
+      updateDetailedPathOnMap();
+    }
+    
+    // マップ上に詳細な経路を表示する関数
+    function updateDetailedPathOnMap() {
+      if (!map || !mapModal || mapModal.style.display !== 'block' || detailedPositionHistory.length < 2) {
+        return;
+      }
+      
+      // 既存の詳細経路レイヤーを削除
+      map.eachLayer(layer => {
+        if (layer._detailedPath) {
+          map.removeLayer(layer);
+        }
+      });
+      
+      // 詳細な位置情報から経路と速度セグメントを作成
+      const detailedLatlngs = detailedPositionHistory.map(pos => [pos.latitude, pos.longitude]);
+      const detailedSpeedSegments = [];
+      
+      for (let i = 0; i < detailedPositionHistory.length - 1; i++) {
+        const current = detailedPositionHistory[i];
+        const next = detailedPositionHistory[i + 1];
+        
+        // 距離を計算
+        const distance = haversineDistance(
+          current.latitude, current.longitude,
+          next.latitude, next.longitude
+        );
+        
+        // 時間差を計算（秒）
+        const timeDiff = (current.timestamp - next.timestamp) / 1000;
+        
+        // 速度を計算（ノット）
+        let speed;
+        if (current.speed !== null && current.speed !== undefined) {
+          speed = convertToKnots(current.speed);
+        } else if (timeDiff > 0) {
+          speed = convertToKnots(distance / timeDiff);
+        } else {
+          speed = 0;
+        }
+        
+        detailedSpeedSegments.push({
+          start: [current.latitude, current.longitude],
+          end: [next.latitude, next.longitude],
+          speed: speed,
+          distance: distance,
+          time: timeDiff
+        });
+      }
+      
+      // 詳細な速度セグメントを地図に表示
+      detailedSpeedSegments.forEach(segment => {
+        const color = getSpeedColor(segment.speed);
+        
+        // 色付きの線を描画
+        const polyline = L.polyline([segment.start, segment.end], { 
+          color: color, 
+          weight: 4, 
+          opacity: currentMapMode === 'speed' ? 0.8 : 0,
+          lineCap: 'round',
+          lineJoin: 'round',
+          _detailedPath: true // カスタムプロパティで識別
+        }).addTo(map);
+        
+        // ポップアップに詳細情報を表示
+        polyline.bindPopup(`
+          <strong>速度:</strong> ${segment.speed.toFixed(1)}ノット<br>
+          <strong>距離:</strong> ${segment.distance.toFixed(1)}m<br>
+          <strong>時間:</strong> ${segment.time.toFixed(1)}秒
+        `);
+      });
     }
 
     // マップを表示する関数をグローバルスコープで定義
