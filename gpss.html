@@ -33,6 +33,30 @@
       color: var(--text-color);
       transition: background-color 0.3s ease, color 0.3s ease;
     }
+    
+    /* 線のアニメーション効果 */
+    @keyframes pulseLine {
+      0% { stroke-width: 5px; }
+      50% { stroke-width: 9px; }
+      100% { stroke-width: 5px; }
+    }
+    
+    /* 詳細経路のアニメーション効果 */
+    @keyframes pulseDetailedLine {
+      0% { stroke-width: 4px; }
+      50% { stroke-width: 8px; }
+      100% { stroke-width: 4px; }
+    }
+    
+    /* アニメーションを適用するクラス */
+    .animated-line {
+      animation: pulseLine 1.5s infinite ease-in-out;
+    }
+    
+    .animated-detailed-line {
+      animation: pulseDetailedLine 1.5s infinite ease-in-out;
+    }
+    
     .container {
       max-width: 500px;
       margin: auto;
@@ -294,15 +318,14 @@
       position: absolute;
       top: 0;
       height: 100%;
-      background-color: rgba(255, 255, 255, 0.5);
-      animation: pulse 1.5s infinite alternate;
+      background-color: rgba(0, 0, 0, 0.5);
     }
 
-    /* 明滅アニメーション */
-    @keyframes pulse {
+    /* 明滅アニメーション - 不要になったため削除 */
+    /*@keyframes pulse {
       0% { opacity: 0.1; }
       100% { opacity: 0.7; }
-    }
+    }*/
 
     .speed-legend-labels {
       display: flex;
@@ -1576,6 +1599,15 @@
         
         polyline.bindPopup(`<strong>速度:</strong> ${segment.speed.toFixed(1)}ノット`);
         speedPolylines.push(polyline);
+        
+        // 選択した速度範囲の場合、アニメーションを適用
+        if (speedFilterMode !== 'all' && visible) {
+          setTimeout(() => {
+            if (polyline._path) {
+              polyline._path.classList.add('animated-line');
+            }
+          }, 100);
+        }
       });
       
       // 詳細な経路情報を表示
@@ -1743,6 +1775,15 @@
           <strong>距離:</strong> ${segment.distance.toFixed(1)}m<br>
           <strong>時間:</strong> ${segment.time.toFixed(1)}秒
         `);
+        
+        // 選択した速度範囲の場合、アニメーションを適用
+        if (speedFilterMode !== 'all' && visible) {
+          setTimeout(() => {
+            if (polyline._path) {
+              polyline._path.classList.add('animated-detailed-line');
+            }
+          }, 100);
+        }
       });
     }
 
@@ -1839,31 +1880,38 @@
         return;
       }
       
-      // 速度範囲に応じたオーバーレイを作成
-      const overlay = document.createElement('div');
-      overlay.className = 'speed-range-overlay';
+      // 速度範囲に応じたオーバーレイを作成（選択した範囲以外を覆う）
+      const overlay1 = document.createElement('div');
+      const overlay2 = document.createElement('div');
+      overlay1.className = 'speed-range-overlay';
+      overlay2.className = 'speed-range-overlay';
       
       const totalWidth = 150; // グラデーションの幅
       
       switch (speedFilterMode) {
         case 'low':
-          // 0-3ノットの部分を明滅させる
-          overlay.style.left = '0';
-          overlay.style.width = `${3 / 10 * totalWidth}px`;
+          // 0-3ノット以外の部分を覆う (3-10+ノット)
+          overlay1.style.left = `${3 / 10 * totalWidth}px`;
+          overlay1.style.width = `${(10 - 3) / 10 * totalWidth}px`;
+          gradientElement.appendChild(overlay1);
           break;
         case 'medium':
-          // 3-6ノットの部分を明滅させる
-          overlay.style.left = `${3 / 10 * totalWidth}px`;
-          overlay.style.width = `${(6 - 3) / 10 * totalWidth}px`;
+          // 0-3ノットの部分を覆う
+          overlay1.style.left = '0';
+          overlay1.style.width = `${3 / 10 * totalWidth}px`;
+          // 6-10+ノットの部分を覆う
+          overlay2.style.left = `${6 / 10 * totalWidth}px`;
+          overlay2.style.width = `${(10 - 6) / 10 * totalWidth}px`;
+          gradientElement.appendChild(overlay1);
+          gradientElement.appendChild(overlay2);
           break;
         case 'high':
-          // 6-10+ノットの部分を明滅させる
-          overlay.style.left = `${6 / 10 * totalWidth}px`;
-          overlay.style.width = `${(10 - 6) / 10 * totalWidth}px`;
+          // 0-6ノットの部分を覆う
+          overlay1.style.left = '0';
+          overlay1.style.width = `${6 / 10 * totalWidth}px`;
+          gradientElement.appendChild(overlay1);
           break;
       }
-      
-      gradientElement.appendChild(overlay);
     }
     
     // 速度表示を更新する関数
@@ -1872,9 +1920,32 @@
       speedPolylines.forEach(polyline => {
         const speed = polyline.options.speed;
         const visible = isSpeedVisible(speed);
-        polyline.setStyle({
-          opacity: visible ? 0.8 : 0
-        });
+        
+        if (speedFilterMode === 'all') {
+          // 全表示モードでは通常の不透明度で表示
+          polyline.setStyle({
+            opacity: 0.8,
+            weight: 5
+          });
+          // アニメーションを削除
+          polyline._path.classList.remove('animated-line');
+        } else if (visible) {
+          // 選択した速度範囲は強調表示（アニメーション効果を適用）
+          polyline.setStyle({
+            opacity: 1.0,
+            weight: 5 // アニメーションで変化するため基本値は通常と同じに
+          });
+          // アニメーションクラスを追加
+          polyline._path.classList.add('animated-line');
+        } else {
+          // 選択していない速度範囲は通常表示
+          polyline.setStyle({
+            opacity: 0.8,
+            weight: 5
+          });
+          // アニメーションを削除
+          polyline._path.classList.remove('animated-line');
+        }
       });
       
       // 詳細な経路情報の表示を更新
@@ -1882,9 +1953,38 @@
         if (layer._detailedPath) {
           const speed = layer.options.speed;
           const visible = isSpeedVisible(speed);
-          layer.setStyle({
-            opacity: visible ? 0.8 : 0
-          });
+          
+          if (speedFilterMode === 'all') {
+            // 全表示モードでは通常の不透明度で表示
+            layer.setStyle({
+              opacity: 0.8,
+              weight: 4
+            });
+            // アニメーションを削除
+            if (layer._path) {
+              layer._path.classList.remove('animated-detailed-line');
+            }
+          } else if (visible) {
+            // 選択した速度範囲は強調表示（アニメーション効果を適用）
+            layer.setStyle({
+              opacity: 1.0,
+              weight: 4 // アニメーションで変化するため基本値は通常と同じに
+            });
+            // アニメーションクラスを追加
+            if (layer._path) {
+              layer._path.classList.add('animated-detailed-line');
+            }
+          } else {
+            // 選択していない速度範囲は通常表示
+            layer.setStyle({
+              opacity: 0.8,
+              weight: 4
+            });
+            // アニメーションを削除
+            if (layer._path) {
+              layer._path.classList.remove('animated-detailed-line');
+            }
+          }
         }
       });
     }
