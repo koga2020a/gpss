@@ -237,7 +237,7 @@
       width: 90%;
       height: 80%;
       margin: 10% auto;
-      background-color: #fff;
+      background-color: var(--container-background);
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -265,6 +265,104 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       cursor: pointer;
       z-index: 1001;
+    }
+
+    /* 速度に基づいた色分け表示のための凡例 */
+    .speed-legend {
+      position: absolute;
+      bottom: 20px;
+      right: 10px;
+      background-color: var(--container-background);
+      padding: 8px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      display: none;
+    }
+
+    .speed-legend-gradient {
+      width: 150px;
+      height: 15px;
+      background: linear-gradient(to right, blue, green, red);
+      margin-bottom: 5px;
+    }
+
+    .speed-legend-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-color);
+    }
+
+    /* マップ表示切替ボタンのスタイル */
+    .map-toggle-container {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background-color: var(--container-background);
+      border-radius: 4px;
+      padding: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .map-toggle-btn {
+      background: none;
+      border: none;
+      color: var(--text-color);
+      padding: 5px 8px;
+      margin: 0 2px;
+      cursor: pointer;
+      border-radius: 2px;
+      font-size: 12px;
+    }
+
+    .map-toggle-btn.active {
+      background-color: #007aff;
+      color: white;
+    }
+
+    /* 現在地追跡ボタン */
+    .track-mode-btn {
+      position: absolute;
+      bottom: 80px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+      background-color: var(--container-background);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      color: var(--text-color);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      z-index: 999;
+    }
+
+    .track-mode-btn.active {
+      background-color: #007aff;
+      color: white;
+    }
+
+    /* 情報パネル */
+    .map-info-panel {
+      position: absolute;
+      bottom: 20px;
+      left: 10px;
+      background-color: var(--container-background);
+      padding: 8px 12px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+      max-width: 200px;
+      font-size: 12px;
+      color: var(--text-color);
+    }
+
+    .map-info-data {
+      margin: 4px 0;
     }
   </style>
   <!-- ResponsiveVoice.jsを追加 -->
@@ -298,11 +396,39 @@
     
   </div>
   
-  <!-- マップ表示用のモーダルウィンドウ -->
+  <!-- マップ表示用のモーダルウィンドウ（拡張版） -->
   <div id="mapModal" class="map-modal">
     <div class="map-modal-content">
       <div id="map"></div>
       <div class="close-btn" id="closeMapBtn">×</div>
+      
+      <!-- マップ表示切替ボタン -->
+      <div class="map-toggle-container">
+        <button class="map-toggle-btn active" id="toggleNormal">通常</button>
+        <button class="map-toggle-btn" id="toggleSpeed">速度</button>
+        <button class="map-toggle-btn" id="toggleSatellite">衛星</button>
+      </div>
+      
+      <!-- 速度凡例 -->
+      <div class="speed-legend" id="speedLegend">
+        <div class="speed-legend-gradient"></div>
+        <div class="speed-legend-labels">
+          <span>0</span>
+          <span>5</span>
+          <span>10+</span>
+        </div>
+        <div style="text-align: center; font-size: 10px; margin-top: 2px;">速度 (ノット)</div>
+      </div>
+      
+      <!-- 追跡モードボタン -->
+      <div class="track-mode-btn" id="trackModeBtn">📍</div>
+      
+      <!-- 情報パネル -->
+      <div class="map-info-panel">
+        <div class="map-info-data" id="mapCurrentSpeed">速度: 0.0 ノット</div>
+        <div class="map-info-data" id="mapCurrentAlt">高度: -- m</div>
+        <div class="map-info-data" id="mapCurrentHeading">方位: -- °</div>
+      </div>
     </div>
   </div>
   
@@ -521,6 +647,11 @@
       } else {
         // 速度表示（すでにスムージング済みの値を受け取る）
         speedDisplayElem.textContent = speedKnots.toFixed(1);
+      }
+      
+      // マップ情報パネルも更新
+      if (document.getElementById('mapCurrentSpeed')) {
+        document.getElementById('mapCurrentSpeed').textContent = `速度: ${speedKnots ? speedKnots.toFixed(1) : "0.0"} ノット`;
       }
     }
 
@@ -1092,6 +1223,9 @@
       if (savedLocations.length > 0) {
         updateSavedLocationsList();
       }
+      
+      // マップが表示されている場合は、マップも更新
+      updateMapIfVisible();
     }
 
     // イベントリスナーの設定
@@ -1155,9 +1289,99 @@
     let map = null;
     let mapModal = null;
     let mapElement = null;
+    let isTrackingMode = false;
+    let currentMapMode = 'normal'; // normal, speed, satellite
+    let speedSegments = []; // 速度データのセグメント
+    let speedPolylines = []; // 速度表示用のポリライン配列
 
-    // マップを表示する関数をグローバルスコープで定義
-    function showMap(lat, lng) {
+    // マップ表示を切り替える関数
+    function switchMapMode(mode) {
+      currentMapMode = mode;
+      
+      // 全てのボタンから active クラスを削除
+      document.querySelectorAll('.map-toggle-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // 選択されたボタンに active クラスを追加
+      document.getElementById(`toggle${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
+      
+      // 速度凡例の表示/非表示
+      const speedLegend = document.getElementById('speedLegend');
+      speedLegend.style.display = mode === 'speed' ? 'block' : 'none';
+      
+      if (map) {
+        // 既存のタイルレイヤーを削除
+        map.eachLayer(layer => {
+          if (layer instanceof L.TileLayer) {
+            map.removeLayer(layer);
+          }
+        });
+        
+        // 選択されたモードに基づいてタイルレイヤーを追加
+        if (mode === 'satellite') {
+          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+          }).addTo(map);
+        } else {
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }).addTo(map);
+        }
+        
+        // 速度表示の切替
+        speedPolylines.forEach(polyline => {
+          polyline.setStyle({
+            opacity: mode === 'speed' ? 0.8 : 0
+          });
+        });
+      }
+    }
+
+    // 追跡モードの切り替え
+    function toggleTrackingMode() {
+      isTrackingMode = !isTrackingMode;
+      
+      const trackModeBtn = document.getElementById('trackModeBtn');
+      if (isTrackingMode) {
+        trackModeBtn.classList.add('active');
+        // 現在位置があれば、その位置にマップの中心を移動
+        if (currentPosition && map) {
+          map.setView([currentPosition.coords.latitude, currentPosition.coords.longitude], map.getZoom());
+        }
+      } else {
+        trackModeBtn.classList.remove('active');
+      }
+    }
+
+    // 速度に応じた色を取得する関数
+    function getSpeedColor(speed) {
+      // 速度に応じた色を決定（0～10ノットを青→緑→赤のグラデーションで表現）
+      const cappedSpeed = Math.min(speed, 10); // 10ノット以上は同じ色に
+      const ratio = cappedSpeed / 10;
+      
+      // 青(0,0,255) → 緑(0,255,0) → 赤(255,0,0)のグラデーション
+      let r, g, b;
+      if (ratio < 0.5) {
+        // 青から緑へ
+        const factor = ratio * 2;
+        r = 0;
+        g = Math.round(255 * factor);
+        b = Math.round(255 * (1 - factor));
+      } else {
+        // 緑から赤へ
+        const factor = (ratio - 0.5) * 2;
+        r = Math.round(255 * factor);
+        g = Math.round(255 * (1 - factor));
+        b = 0;
+      }
+      
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    // 現在地を目立つアイコンで表示し、進行方向を示す関数
+    function showMapWithEnhancedFeatures(lat, lng) {
       if (!mapModal) {
         mapModal = document.getElementById('mapModal');
       }
@@ -1174,37 +1398,232 @@
       }
       
       // 新しいマップを作成
-      map = L.map(mapElement).setView([lat, lng], 12);
+      map = L.map(mapElement).setView([lat, lng], 15);
 
+      // デフォルトタイルレイヤーを追加
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 
-      // 現在の位置を最初に追加
-      const latlngs = [];
-      if (currentPosition) {
-        latlngs.push([currentPosition.coords.latitude, currentPosition.coords.longitude]);
-        L.marker([currentPosition.coords.latitude, currentPosition.coords.longitude]).addTo(map)
-          .bindPopup("現在位置");
-      }
+      // スケールコントロールを追加
+      L.control.scale({
+        imperial: false,  // メートル法のみを表示
+        position: 'bottomright'
+      }).addTo(map);
 
-      // 各地点にマーカーを追加
-      savedLocations.forEach(location => {
-        latlngs.push([location.latitude, location.longitude]);
-        L.marker([location.latitude, location.longitude]).addTo(map)
-          .bindPopup(location.timestamp);
+      // 現在位置のカスタムアイコン
+      const currentPositionIcon = L.divIcon({
+        className: 'current-position-icon',
+        html: '<div style="background-color: #4285F4; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
       });
 
-      // 地点を結ぶ線を描画
-      if (latlngs.length > 1) {
-        L.polyline(latlngs, { color: 'blue' }).addTo(map);
+      // 保存地点のカスタムアイコン
+      const savedLocationIcon = L.divIcon({
+        className: 'saved-location-icon',
+        html: '<div style="background-color: #DB4437; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.5);"></div>',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+
+      const latlngs = [];
+      speedSegments = [];
+      speedPolylines = [];
+      
+      // 保存位置を追加
+      savedLocations.forEach((location, index) => {
+        latlngs.push([location.latitude, location.longitude]);
+        
+        // 速度データを収集（次の地点との平均速度）
+        if (index < savedLocations.length - 1) {
+          const nextLoc = savedLocations[index + 1];
+          const distance = haversineDistance(
+            location.latitude, location.longitude,
+            nextLoc.latitude, nextLoc.longitude
+          );
+          const timeDiff = (location.time - nextLoc.time) / 1000; // 秒
+          const speed = timeDiff > 0 ? convertToKnots(distance / timeDiff) : 0;
+          
+          speedSegments.push({
+            start: [location.latitude, location.longitude],
+            end: [nextLoc.latitude, nextLoc.longitude],
+            speed: speed
+          });
+        }
+        
+        // マーカーとポップアップを追加
+        const marker = L.marker([location.latitude, location.longitude], { icon: savedLocationIcon }).addTo(map);
+        
+        // ポップアップの詳細情報を作成
+        let popupContent = `<div style="font-size: 14px;">
+          <strong>時刻:</strong> ${location.timestamp}<br>`;
+        
+        // 最新の地点（インデックス0）以外は、前の地点との比較情報を表示
+        if (index < savedLocations.length - 1) {
+          const prevLoc = savedLocations[index + 1];
+          const timeElapsed = (location.time - prevLoc.time) / (1000 * 60); // 分単位
+          
+          if (timeElapsed > 0) {
+            const pointDistance = haversineDistance(
+              location.latitude, location.longitude,
+              prevLoc.latitude, prevLoc.longitude
+            );
+            
+            const speedMps = pointDistance / (timeElapsed * 60); // m/s
+            const speedKnots = convertToKnots(speedMps);
+            
+            popupContent += `<strong>区間距離:</strong> ${Math.round(pointDistance)}m<br>
+            <strong>所要時間:</strong> ${Math.floor(timeElapsed)}分 ${Math.round((timeElapsed - Math.floor(timeElapsed)) * 60)}秒<br>
+            <strong>平均速度:</strong> ${speedKnots.toFixed(1)}ノット<br>`;
+          }
+        }
+        
+        popupContent += `</div>`;
+        marker.bindPopup(popupContent);
+      });
+
+      // 現在位置を追加
+      if (currentPosition) {
+        const currentLat = currentPosition.coords.latitude;
+        const currentLng = currentPosition.coords.longitude;
+        latlngs.unshift([currentLat, currentLng]);
+        
+        // 進行方向を取得（heading）
+        const heading = currentPosition.coords.heading;
+        let headingIcon = currentPositionIcon;
+        
+        // 進行方向がある場合は矢印アイコンを使用
+        if (heading !== null && heading !== undefined && !isNaN(heading)) {
+          headingIcon = L.divIcon({
+            className: 'heading-icon',
+            html: `<div style="background-color: #4285F4; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5); position: relative;">
+                    <div style="position: absolute; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 12px solid #4285F4; transform: rotate(${heading}deg); transform-origin: center 75%; top: -10px; left: 2px;"></div>
+                  </div>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+          });
+        }
+        
+        const marker = L.marker([currentLat, currentLng], { icon: headingIcon }).addTo(map);
+        
+        // 現在位置のポップアップ情報
+        const speed = currentPosition.coords.speed !== null ? 
+                     convertToKnots(currentPosition.coords.speed).toFixed(1) + "ノット" : 
+                     "不明";
+        
+        marker.bindPopup(`<div style="font-size: 14px;">
+          <strong>現在位置</strong><br>
+          <strong>速度:</strong> ${speed}<br>
+          <strong>緯度:</strong> ${currentLat.toFixed(6)}<br>
+          <strong>経度:</strong> ${currentLng.toFixed(6)}<br>
+          ${currentPosition.coords.altitude !== null ? `<strong>高度:</strong> ${Math.round(currentPosition.coords.altitude)}m<br>` : ''}
+          ${heading !== null && !isNaN(heading) ? `<strong>方位:</strong> ${Math.round(heading)}°<br>` : ''}
+        </div>`);
+        
+        // 情報パネルを更新
+        updateMapInfoPanel();
       }
 
+      // 基本の経路線（グレー）
+      L.polyline(latlngs, { color: '#666', weight: 3, opacity: 0.6 }).addTo(map);
+      
+      // 速度に基づいた色分け経路
+      speedSegments.forEach(segment => {
+        const color = getSpeedColor(segment.speed);
+        
+        // 色付きの線を描画
+        const polyline = L.polyline([segment.start, segment.end], { 
+          color: color, 
+          weight: 5, 
+          opacity: currentMapMode === 'speed' ? 0.8 : 0,
+          lineCap: 'round',
+          lineJoin: 'round',
+        }).addTo(map);
+        
+        polyline.bindPopup(`<strong>速度:</strong> ${segment.speed.toFixed(1)}ノット`);
+        speedPolylines.push(polyline);
+      });
+      
       // マップが表示された後にinvalidateSizeを呼び出す
       setTimeout(() => {
         map.invalidateSize();
       }, 100);
+      
+      // イベントリスナーの設定
+      setupMapEventListeners();
+    }
+
+    // 情報パネルの更新
+    function updateMapInfoPanel() {
+      if (!currentPosition || !document.getElementById('mapCurrentSpeed')) return;
+      
+      // 速度情報
+      let speedKnots = 0;
+      if (currentPosition.coords.speed !== null && currentPosition.coords.speed !== undefined) {
+        speedKnots = convertToKnots(currentPosition.coords.speed);
+      } else if (lastAnnouncedPosition) {
+        const speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
+        speedKnots = convertToKnots(speedMps);
+      }
+      const smoothedSpeed = getSmoothedSpeed(speedKnots);
+      document.getElementById('mapCurrentSpeed').textContent = `速度: ${smoothedSpeed.toFixed(1)} ノット`;
+      
+      // 高度情報
+      if (currentPosition.coords.altitude !== null && currentPosition.coords.altitude !== undefined) {
+        document.getElementById('mapCurrentAlt').textContent = `高度: ${Math.round(currentPosition.coords.altitude)} m`;
+      } else {
+        document.getElementById('mapCurrentAlt').textContent = `高度: -- m`;
+      }
+      
+      // 方位情報
+      if (currentPosition.coords.heading !== null && currentPosition.coords.heading !== undefined && !isNaN(currentPosition.coords.heading)) {
+        document.getElementById('mapCurrentHeading').textContent = `方位: ${Math.round(currentPosition.coords.heading)}°`;
+      } else {
+        document.getElementById('mapCurrentHeading').textContent = `方位: -- °`;
+      }
+    }
+
+    // マップのイベントリスナーを設定
+    function setupMapEventListeners() {
+      // マップ表示切替ボタン
+      document.getElementById('toggleNormal').addEventListener('click', () => switchMapMode('normal'));
+      document.getElementById('toggleSpeed').addEventListener('click', () => switchMapMode('speed'));
+      document.getElementById('toggleSatellite').addEventListener('click', () => switchMapMode('satellite'));
+      
+      // 追跡モードボタン
+      document.getElementById('trackModeBtn').addEventListener('click', toggleTrackingMode);
+    }
+
+    // 位置情報更新時にマップを更新する関数
+    function updateMapIfVisible() {
+      if (mapModal && mapModal.style.display === 'block' && map && currentPosition) {
+        // 追跡モードがオンの場合、マップの中心を現在位置に移動
+        if (isTrackingMode) {
+          map.setView([currentPosition.coords.latitude, currentPosition.coords.longitude], map.getZoom());
+        }
+        
+        // 情報パネルを更新
+        updateMapInfoPanel();
+      }
+    }
+
+    // マップを表示する関数をグローバルスコープで定義
+    function showMap(lat, lng) {
+      // 拡張されたマップ表示関数を呼び出す
+      showMapWithEnhancedFeatures(lat, lng);
+    }
+
+    // マップを閉じる関数
+    function closeMap() {
+      if (mapModal) {
+        mapModal.style.display = 'none';
+      }
+      if (map) {
+        map.remove();
+        map = null;
+      }
     }
 
     // マップを初期化する関数
@@ -1212,17 +1631,22 @@
       if (!mapModal) {
         mapModal = document.getElementById('mapModal');
       }
-      const closeMapBtn = document.getElementById('closeMapBtn');
-
-      function closeMap() {
-        mapModal.style.display = 'none';
-        if (map) {
-          map.remove();
-          map = null;
-        }
+      if (!mapElement) {
+        mapElement = document.getElementById('map');
       }
-
+      const closeMapBtn = document.getElementById('closeMapBtn');
+      
       closeMapBtn.addEventListener('click', closeMap);
+      
+      // 追跡モードボタンの初期設定
+      const trackModeBtn = document.getElementById('trackModeBtn');
+      if (trackModeBtn) {
+        trackModeBtn.classList.remove('active');
+        isTrackingMode = false;
+      }
+      
+      // マップ表示切替ボタンの初期設定
+      switchMapMode('normal');
     }
 
     // ページ読み込み時に初期化
