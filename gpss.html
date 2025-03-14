@@ -36,25 +36,27 @@
     
     /* 線のアニメーション効果 */
     @keyframes pulseLine {
-      0% { stroke-width: 5px; }
-      50% { stroke-width: 9px; }
-      100% { stroke-width: 5px; }
+      0% { stroke-width: 5px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
+      50% { stroke-width: 9px; filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)); }
+      100% { stroke-width: 5px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
     }
     
     /* 詳細経路のアニメーション効果 */
     @keyframes pulseDetailedLine {
-      0% { stroke-width: 4px; }
-      50% { stroke-width: 8px; }
-      100% { stroke-width: 4px; }
+      0% { stroke-width: 4px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
+      50% { stroke-width: 8px; filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)); }
+      100% { stroke-width: 4px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
     }
     
     /* アニメーションを適用するクラス */
     .animated-line {
       animation: pulseLine 1.5s infinite ease-in-out;
+      filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8));
     }
     
     .animated-detailed-line {
       animation: pulseDetailedLine 1.5s infinite ease-in-out;
+      filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8));
     }
     
     .container {
@@ -393,6 +395,17 @@
 
     .map-info-data {
       margin: 4px 0;
+    }
+
+    /* SVGパスの影効果 */
+    .leaflet-interactive {
+      transition: filter 0.3s ease;
+    }
+    
+    /* 選択された速度範囲の線のスタイル */
+    .speed-highlighted-path {
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9)) !important;
+      z-index: 1000 !important;
     }
   </style>
   <!-- ResponsiveVoice.jsを追加 -->
@@ -1925,26 +1938,41 @@
           // 全表示モードでは通常の不透明度で表示
           polyline.setStyle({
             opacity: 0.8,
-            weight: 5
+            weight: 5,
+            color: getSpeedColor(speed) // 元の色を使用
           });
           // アニメーションを削除
           polyline._path.classList.remove('animated-line');
+          // 強調表示用のクラスを削除
+          polyline._path.classList.remove('speed-highlighted-path');
+          // 通常の線用の影を追加
+          polyline._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
         } else if (visible) {
-          // 選択した速度範囲は強調表示（アニメーション効果を適用）
+          // 選択した速度範囲は強調表示（アニメーション効果と影を適用）
           polyline.setStyle({
             opacity: 1.0,
-            weight: 5 // アニメーションで変化するため基本値は通常と同じに
+            weight: 5, // アニメーションで変化するため基本値は通常と同じに
+            color: getSpeedColor(speed) // 元の色を使用
           });
           // アニメーションクラスを追加
           polyline._path.classList.add('animated-line');
+          // 影効果を追加（アニメーションと合わせて）
+          polyline._path.style.filter = 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.8))';
+          // 強調表示用のクラスを追加
+          polyline._path.classList.add('speed-highlighted-path');
         } else {
-          // 選択していない速度範囲は通常表示
+          // 選択していない速度範囲は白色で表示
           polyline.setStyle({
             opacity: 0.8,
-            weight: 5
+            weight: 5,
+            color: '#ffffff' // 白色に変更
           });
           // アニメーションを削除
           polyline._path.classList.remove('animated-line');
+          // 強調表示用のクラスを削除
+          polyline._path.classList.remove('speed-highlighted-path');
+          // 白い線用の影を追加（黒い影で白い線を目立たせる）
+          polyline._path.style.filter = 'drop-shadow(0 0 2px rgba(0, 0, 0, 0.7))';
         }
       });
       
@@ -1958,31 +1986,46 @@
             // 全表示モードでは通常の不透明度で表示
             layer.setStyle({
               opacity: 0.8,
-              weight: 4
+              weight: 4,
+              color: getSpeedColor(speed) // 元の色を使用
             });
             // アニメーションを削除
             if (layer._path) {
               layer._path.classList.remove('animated-detailed-line');
+              // 強調表示用のクラスを削除
+              layer._path.classList.remove('speed-highlighted-path');
+              // 通常の線用の影を追加
+              layer._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
             }
           } else if (visible) {
-            // 選択した速度範囲は強調表示（アニメーション効果を適用）
+            // 選択した速度範囲は強調表示（アニメーション効果と影を適用）
             layer.setStyle({
               opacity: 1.0,
-              weight: 4 // アニメーションで変化するため基本値は通常と同じに
+              weight: 4, // アニメーションで変化するため基本値は通常と同じに
+              color: getSpeedColor(speed) // 元の色を使用
             });
             // アニメーションクラスを追加
             if (layer._path) {
               layer._path.classList.add('animated-detailed-line');
+              // 影効果を追加（アニメーションと合わせて）
+              layer._path.style.filter = 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.8))';
+              // 強調表示用のクラスを追加
+              layer._path.classList.add('speed-highlighted-path');
             }
           } else {
-            // 選択していない速度範囲は通常表示
+            // 選択していない速度範囲は白色で表示
             layer.setStyle({
               opacity: 0.8,
-              weight: 4
+              weight: 4,
+              color: '#ffffff' // 白色に変更
             });
             // アニメーションを削除
             if (layer._path) {
               layer._path.classList.remove('animated-detailed-line');
+              // 強調表示用のクラスを削除
+              layer._path.classList.remove('speed-highlighted-path');
+              // 白い線用の影を追加（黒い影で白い線を目立たせる）
+              layer._path.style.filter = 'drop-shadow(0 0 2px rgba(0, 0, 0, 0.7))';
             }
           }
         }
