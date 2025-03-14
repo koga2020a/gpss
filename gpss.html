@@ -428,6 +428,21 @@
       cursor: move;
       z-index: 1001;
     }
+
+    .map-toggle-btn {
+      background-color: var(--container-background);
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-color);
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      margin-left: 5px;
+    }
+    .map-toggle-btn:hover {
+      background-color: rgba(0, 122, 255, 0.1);
+    }
   </style>
   <!-- ResponsiveVoice.jsを追加 -->
   <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_API_KEY"></script>
@@ -655,7 +670,7 @@
 
     // 2点間の距離（メートル）をhaversineの公式で算出
     function haversineDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371000; // 地球の半径（メートル）
+      const R = 6371000; // 地球の半径（メートール）
       const toRad = Math.PI / 180;
       const dLat = (lat2 - lat1) * toRad;
       const dLon = (lon2 - lon1) * toRad;
@@ -1642,8 +1657,8 @@
         polyline.on('click', function(e) {
           // クリックした位置を取得
           const clickLatLng = e.latlng;
-          
-          // 既存のマーカーを削除
+        
+        // 既存のマーカーを削除
           if (speedMarker) {
             map.removeLayer(speedMarker);
           }
@@ -2290,6 +2305,18 @@
     document.addEventListener('DOMContentLoaded', () => {
       initialize();
       initMap(); // マップの初期化
+    });
+
+    document.getElementById('toggleMapMode').addEventListener('click', function() {
+      if (currentMapMode === 'speed') {
+        currentMapMode = 'satellite';
+        this.textContent = '速度';
+        // 衛星モードに切り替える処理を追加
+      } else {
+        currentMapMode = 'speed';
+        this.textContent = '衛星';
+        // 速度モードに切り替える処理を追加
+      }
     });
   </script>
 </body>
