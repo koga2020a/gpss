@@ -4,8 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GPS速度voiceアプリ</title>
+  <!-- Leaflet CSSを先に読み込む -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+  <!-- Leaflet JSを次に読み込む -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
   <!-- Supabase Client の追加 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- ResponsiveVoice.jsを追加 -->
+  <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_API_KEY"></script>
+  <!-- Hammer.jsを追加 -->
+  <script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
   <style>
     /* シンプルで使いやすいモバイル向けスタイル */
     :root {
@@ -444,13 +456,6 @@
       background-color: rgba(0, 122, 255, 0.1);
     }
   </style>
-  <!-- ResponsiveVoice.jsを追加 -->
-  <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_API_KEY"></script>
-  <!-- Google Maps APIの参照を削除 -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Hammer.jsを追加 -->
-  <script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -2183,52 +2188,59 @@
     
     // 速度表示を更新する関数
     function updateSpeedDisplay() {
+      // マップが存在しない場合は処理をスキップ
+      if (!map) {
+        return;
+      }
+
       // 保存された経路の表示を更新
-      speedPolylines.forEach(polyline => {
-        const speed = polyline.options.speed;
-        const visible = isSpeedVisible(speed);
-        
-        if (speedFilterMode === 'all') {
-          // 全表示モードでは通常の不透明度で表示
-          polyline.setStyle({
-            opacity: 0.8,
-            weight: 5,
-            color: getSpeedColor(speed) // 元の色を使用
-          });
-          // アニメーションを削除
-          polyline._path.classList.remove('animated-line');
-          // 強調表示用のクラスを削除
-          polyline._path.classList.remove('speed-highlighted-path');
-          // 通常の線用の影を追加
-          polyline._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
-        } else if (visible) {
-          // 選択した速度範囲は強調表示（アニメーション効果と影を適用）
-          polyline.setStyle({
-            opacity: 1.0,
-            weight: 5, // アニメーションで変化するため基本値は通常と同じに
-            color: getSpeedColor(speed) // 元の色を使用
-          });
-          // アニメーションクラスを追加
-          polyline._path.classList.add('animated-line');
-          // 影効果を追加（アニメーションと合わせて）
-          polyline._path.style.filter = 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.8))';
-          // 強調表示用のクラスを追加
-          polyline._path.classList.add('speed-highlighted-path');
-        } else {
-          // 選択していない速度範囲は白色で表示
-          polyline.setStyle({
-            opacity: 0.8,
-            weight: 5,
-            color: '#ffffff' // 白色に変更
-          });
-          // アニメーションを削除
-          polyline._path.classList.remove('animated-line');
-          // 強調表示用のクラスを削除
-          polyline._path.classList.remove('speed-highlighted-path');
-          // 白い線用の影を追加（黒い影で白い線を目立たせる）
-          polyline._path.style.filter = 'drop-shadow(0 0 2px rgba(0, 0, 0, 0.7))';
-        }
-      });
+      if (speedPolylines && speedPolylines.length > 0) {
+        speedPolylines.forEach(polyline => {
+          const speed = polyline.options.speed;
+          const visible = isSpeedVisible(speed);
+          
+          if (speedFilterMode === 'all') {
+            // 全表示モードでは通常の不透明度で表示
+            polyline.setStyle({
+              opacity: 0.8,
+              weight: 5,
+              color: getSpeedColor(speed) // 元の色を使用
+            });
+            // アニメーションを削除
+            polyline._path.classList.remove('animated-line');
+            // 強調表示用のクラスを削除
+            polyline._path.classList.remove('speed-highlighted-path');
+            // 通常の線用の影を追加
+            polyline._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
+          } else if (visible) {
+            // 選択した速度範囲は強調表示（アニメーション効果と影を適用）
+            polyline.setStyle({
+              opacity: 1.0,
+              weight: 5, // アニメーションで変化するため基本値は通常と同じに
+              color: getSpeedColor(speed) // 元の色を使用
+            });
+            // アニメーションクラスを追加
+            polyline._path.classList.add('animated-line');
+            // 影効果を追加（アニメーションと合わせて）
+            polyline._path.style.filter = 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.8))';
+            // 強調表示用のクラスを追加
+            polyline._path.classList.add('speed-highlighted-path');
+          } else {
+            // 選択していない速度範囲は白色で表示
+            polyline.setStyle({
+              opacity: 0.8,
+              weight: 5,
+              color: '#ffffff' // 白色に変更
+            });
+            // アニメーションを削除
+            polyline._path.classList.remove('animated-line');
+            // 強調表示用のクラスを削除
+            polyline._path.classList.remove('speed-highlighted-path');
+            // 白い線用の影を追加（黒い影で白い線を目立たせる）
+            polyline._path.style.filter = 'drop-shadow(0 0 2px rgba(0, 0, 0, 0.7))';
+          }
+        });
+      }
       
       // 詳細な経路情報の表示を更新
       map.eachLayer(layer => {
