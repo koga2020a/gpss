@@ -121,12 +121,12 @@
       text-align: center;
       font-size: 2em;
       font-weight: bold;
-      cursor: pointer; /* タップ可能なことを示すカーソルスタイルを追加 */
+      cursor: pointer;
     }
     .interval-container {
       display: flex;
       align-items: center;
-      justify-content: center; /* 中央に配置 */
+      justify-content: center;
       margin: 15px 0;
     }
     .speed-btn {
@@ -135,24 +135,24 @@
       color: #333;
     }
     #decreaseInterval {
-      background: #ffcc00; /* - ボタンを黄色に */
+      background: #ffcc00;
     }
     #increaseInterval {
-      background: #00bfff; /* + ボタンを水色に */
+      background: #00bfff;
     }
     .interval-display {
-      display: inline-flex; /* インラインフレックスで配置 */
-      align-items: baseline; /* ベースラインで揃える */
+      display: inline-flex;
+      align-items: baseline;
       text-align: center;
       font-size: 2em;
       font-weight: bold;
-      cursor: pointer; /* タップ可能なことを示す */
-      position: relative; /* 単位の配置のため */
+      cursor: pointer;
+      position: relative;
     }
     .interval-unit {
       font-size: 0.5em;
       font-weight: normal;
-      margin-left: 2px; /* 数字と単位の間隔を調整 */
+      margin-left: 2px;
     }
     .here-btn {
       margin: 10px 0;
@@ -180,10 +180,9 @@
       transform: translateX(100px);
       opacity: 0.5;
     }
-    /* 削除アイコンのコンテナ */
     .delete-icon {
       position: fixed;
-      right: calc(50% - 250px + 20px); /* containerの右端から20px */
+      right: calc(50% - 250px + 20px);
       top: 50%;
       transform: translateY(-50%);
       opacity: 0;
@@ -200,7 +199,7 @@
     }
     @media (max-width: 540px) {
       .delete-icon {
-        right: 20px; /* 画面幅が狭い場合は右端から20px */
+        right: 20px;
       }
     }
     .location-item.will-delete .delete-icon {
@@ -251,13 +250,11 @@
       font-weight: bold;
       color: var(--muted-text-color);
     }
-    /* デバッグ情報表示用のスタイル */
     .speech-log-item {
       padding: 5px 0;
       border-bottom: 1px solid #eee;
       font-size: 0.9em;
     }
-    
     /* マップ表示用のモーダルウィンドウスタイル */
     .map-modal {
       display: none;
@@ -269,7 +266,6 @@
       background-color: rgba(0, 0, 0, 0.7);
       z-index: 1000;
     }
-    
     .map-modal-content {
       position: relative;
       width: 90%;
@@ -280,12 +276,10 @@
       overflow: hidden;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
-    
     #map {
       width: 100%;
       height: 100%;
     }
-    
     .close-btn {
       position: absolute;
       top: 10px;
@@ -304,7 +298,6 @@
       cursor: pointer;
       z-index: 1001;
     }
-
     /* 速度に基づいた色分け表示のための凡例 */
     .speed-legend {
       position: absolute;
@@ -315,10 +308,9 @@
       border-radius: 4px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       z-index: 1000;
-      display: block; /* noneからblockに変更して初期表示されるようにする */
-      cursor: pointer; /* クリック可能であることを示す */
+      display: block;
+      cursor: pointer;
     }
-
     .speed-legend-gradient {
       width: 150px;
       height: 15px;
@@ -326,41 +318,27 @@
       margin-bottom: 5px;
       position: relative;
     }
-
-    /* 速度範囲のオーバーレイ */
     .speed-range-overlay {
       position: absolute;
       top: 0;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
     }
-
-    /* 明滅アニメーション - 不要になったため削除 */
-    /*@keyframes pulse {
-      0% { opacity: 0.1; }
-      100% { opacity: 0.7; }
-    }*/
-
     .speed-legend-labels {
       display: flex;
       justify-content: space-between;
       font-size: 12px;
       color: var(--text-color);
     }
-
     .speed-legend-mode {
       text-align: center;
       font-size: 10px;
       margin-top: 2px;
       font-weight: bold;
     }
-
-    /* マップ表示切替ボタンのスタイル - 不要になったため削除 */
     .map-toggle-container {
-      display: none; /* 非表示にする */
+      display: none;
     }
-
-    /* 現在地追跡ボタン */
     .track-mode-btn {
       position: absolute;
       bottom: 90px;
@@ -378,13 +356,10 @@
       cursor: pointer;
       z-index: 999;
     }
-
     .track-mode-btn.active {
       background-color: #007aff;
       color: white;
     }
-
-    /* 情報パネル */
     .map-info-panel {
       position: absolute;
       bottom: 20px;
@@ -398,49 +373,20 @@
       font-size: 12px;
       color: var(--text-color);
       cursor: pointer;
-      height: 40px; /* 2行分の高さに固定 */
-      overflow: hidden; /* 内容が溢れないようにする */
-      width: 116px; /* 初期の幅を116pxに設定 */
+      height: 40px;
+      overflow: hidden;
+      width: 116px;
     }
-
-    /* ホバー効果を削除 */
-    /*.map-info-panel:hover {
-      background-color: rgba(0, 122, 255, 0.1);
-    }*/
-
     .map-info-data {
       margin: 4px 0;
     }
-
-    /* SVGパスの影効果 */
     .leaflet-interactive {
       transition: filter 0.3s ease;
     }
-    
-    /* 選択された速度範囲の線のスタイル */
     .speed-highlighted-path {
       filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9)) !important;
       z-index: 1000 !important;
     }
-    
-    /* 速度表示マーク */
-    .speed-marker {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 30px;
-      height: 30px;
-      background-color: rgba(255, 255, 255, 0.9);
-      border-radius: 50%;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-      font-weight: bold;
-      font-size: 10px;
-      color: #333;
-      border: 2px solid #007aff;
-      cursor: move;
-      z-index: 1001;
-    }
-
     .map-toggle-btn {
       background-color: var(--container-background);
       border: none;
@@ -480,13 +426,13 @@
     
   </div>
   
-  <!-- マップ表示用のモーダルウィンドウ（拡張版） -->
+  <!-- マップ表示用のモーダルウィンドウ -->
   <div id="mapModal" class="map-modal">
     <div class="map-modal-content">
       <div id="map"></div>
       <div class="close-btn" id="closeMapBtn">×</div>
       
-      <!-- マップ表示切替ボタン - 非表示にするが、コードの互換性のために残す -->
+      <!-- マップ表示切替ボタン（非表示） -->
       <div class="map-toggle-container">
         <button class="map-toggle-btn active" id="toggleMapMode">速度</button>
       </div>
@@ -505,7 +451,7 @@
       <!-- 追跡モードボタン -->
       <div class="track-mode-btn" id="trackModeBtn">📍</div>
       
-      <!-- 情報パネル - クリックでマップモード切替 -->
+      <!-- 情報パネル（クリックでマップモード切替） -->
       <div class="map-info-panel" id="mapInfoPanel">
         <div class="map-info-data" id="mapSelectedSpeed" style="display: none;">選択: 0.0 ノット</div>
         <div class="map-info-data" id="mapSelectedTime" style="display: none;">時間: -- 分前</div>
@@ -514,7 +460,7 @@
   </div>
   
   <script>
-    // グローバル変数の定義
+    // グローバル変数
     let watchId;
     let currentPosition = null;
     let lastAnnouncedPosition = null;
@@ -524,29 +470,21 @@
     const MAX_SAVED_LOCATIONS = 5;
     let speedHistory = [];
     const MAX_SPEED_HISTORY = 5;
-    const MAX_SPEECH_LOG = 10;
     let speechHistory = [];
     let lastSpeechTime = 0;
     const MIN_SPEECH_INTERVAL = 7000;
     const INTERVAL_VALUES = [null, 10, 30, 50, 120, 240];
-    
-    // 速度表示用の詳細な位置情報を保持する配列
-    let detailedPositionHistory = [];
-    const DETAILED_POSITION_INTERVAL = 5000; // 5秒間隔
-    let lastDetailedPositionTime = 0;
-    const MAX_DETAILED_POSITIONS = 100; // 最大保持数
-    
-    // 速度表示マーク関連の変数
-    let speedMarker = null;
-    let selectedSegment = null;
-    let speedMarkerTimer = null;
-    const SPEED_MARKER_TIMEOUT = 30000; // 30秒
 
-    // Supabaseの初期化を行う関数
+    // 速度表示用詳細位置情報
+    let detailedPositionHistory = [];
+    const DETAILED_POSITION_INTERVAL = 5000;
+    let lastDetailedPositionTime = 0;
+    const MAX_DETAILED_POSITIONS = 100;
+
+    // Supabase初期化
     async function initializeSupabase() {
       const SUPABASE_URL = 'https://ylsoibodesucxrxofuir.supabase.co';
       const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlsc29pYm9kZXN1Y3hyeG9mdWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE1MTA5MzAsImV4cCI6MjA1NzA4NjkzMH0.keB3IujuD-9-398opVDmChBETN0DhNy4u2iaQKdbGtU';
-      
       try {
         return supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       } catch (error) {
@@ -554,18 +492,14 @@
         return null;
       }
     }
-
-    // Supabaseクライアントの初期化とリトライ
     let supabaseClient = null;
     async function setupSupabaseClient() {
       supabaseClient = await initializeSupabase();
       if (!supabaseClient) {
         console.log('Supabase client initialization failed. Retrying in 5 seconds...');
-        setTimeout(setupSupabaseClient, 5000); // 5秒後に再試行
+        setTimeout(setupSupabaseClient, 5000);
       }
     }
-
-    // 初期化を実行
     setupSupabaseClient();
 
     // レース情報
@@ -576,36 +510,27 @@
     let offlineQueue = [];
     const OFFLINE_QUEUE_KEY = 'gpsOfflineQueue';
 
-    // URLパラメータからレース情報を取得
     function getRaceInfoFromUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       raceUuid = urlParams.get('race');
       racePassword = urlParams.get('pwd');
       return raceUuid && racePassword;
     }
-
-    // オフラインキューの保存
     function saveOfflineQueue() {
       localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(offlineQueue));
     }
-
-    // オフラインキューの読み込み
     function loadOfflineQueue() {
       const saved = localStorage.getItem(OFFLINE_QUEUE_KEY);
       if (saved) {
         offlineQueue = JSON.parse(saved);
       }
     }
-
-    // Supabaseにデータを送信する関数
     async function sendToSupabase(data) {
       if (!supabaseClient) {
         console.error('Supabase client is not initialized.');
         return false;
       }
-
       if (!raceUuid || !racePassword) return;
-
       try {
         const { data: result, error } = await supabaseClient
           .rpc('insert_race_tracking', {
@@ -620,7 +545,6 @@
             p_heading: data.coords.heading,
             p_speed: data.coords.speed
           });
-
         if (error || !result.success) {
           console.error('Supabase error:', error || result.error);
           return false;
@@ -631,28 +555,20 @@
         return false;
       }
     }
-
-    // オフラインキューの処理
     async function processOfflineQueue() {
       if (!navigator.onLine || offlineQueue.length === 0) return;
-
       const successfulUploads = [];
-      
       for (let i = 0; i < offlineQueue.length; i++) {
         const success = await sendToSupabase(offlineQueue[i]);
         if (success) {
           successfulUploads.push(i);
         } else {
-          break; // 送信に失敗したら処理を中断
+          break;
         }
       }
-
-      // 成功したデータをキューから削除
       offlineQueue = offlineQueue.filter((_, index) => !successfulUploads.includes(index));
       saveOfflineQueue();
     }
-
-    // オンライン状態の監視
     window.addEventListener('online', processOfflineQueue);
 
     const statusElem = document.getElementById('status');
@@ -664,7 +580,7 @@
     const savedLocationsListElem = document.getElementById('savedLocationsList');
     const savedLocationsTitle = document.getElementById('savedLocationsTitle');
 
-    // 日本語の音声を選択（利用可能な場合）
+    // 日本語音声設定
     let selectedVoice = null;
     function setVoice() {
       const voices = speechSynthesis.getVoices();
@@ -673,9 +589,8 @@
     window.speechSynthesis.onvoiceschanged = setVoice;
     setVoice();
 
-    // 2点間の距離（メートル）をhaversineの公式で算出
     function haversineDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371000; // 地球の半径（メートール）
+      const R = 6371000;
       const toRad = Math.PI / 180;
       const dLat = (lat2 - lat1) * toRad;
       const dLon = (lon2 - lon1) * toRad;
@@ -685,107 +600,67 @@
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     }
-
-    // 2点間の平均速度（m/s）を計算
     function calculateSpeed(lastPos, currentPos) {
       const distance = haversineDistance(
         lastPos.coords.latitude, lastPos.coords.longitude,
         currentPos.coords.latitude, currentPos.coords.longitude
       );
-      const timeDiff = (currentPos.timestamp - lastPos.timestamp) / 1000; // 秒
+      const timeDiff = (currentPos.timestamp - lastPos.timestamp) / 1000;
       return timeDiff > 0 ? distance / timeDiff : 0;
     }
-
-    // m/sからノットへの変換（1 m/s ≒ 1.94384 knot）
     function convertToKnots(mps) {
       return mps * 1.94384;
     }
-
-    // 速度の移動平均を計算する関数
     function getSmoothedSpeed(newSpeed) {
-      // 速度が急激に変化した場合でも履歴を完全にリセットしない
-      // 例：現在の履歴の平均と新しい速度の差が1.5ノット以上ある場合
       if (speedHistory.length > 0) {
         const currentAvg = speedHistory.reduce((acc, speed) => acc + speed, 0) / speedHistory.length;
         if (Math.abs(currentAvg - newSpeed) > 1.5) {
-          // 履歴を完全にリセットせず、新しい値を追加
           speedHistory = [newSpeed, currentAvg];
         } else {
-          // 新しい速度を履歴に追加
           speedHistory.unshift(newSpeed);
         }
       } else {
-        // 履歴がない場合は新しい速度を追加
         speedHistory.push(newSpeed);
       }
-      
-      // 履歴が最大数を超えたら古いデータを削除
       if (speedHistory.length > MAX_SPEED_HISTORY) {
         speedHistory.pop();
       }
-      
-      // 常に値を返す（十分なデータがなくても）
       const sum = speedHistory.reduce((acc, speed) => acc + speed, 0);
       const avgSpeed = sum / speedHistory.length;
-      
-      // 停止状態の判定（閾値以下なら0とみなす）
       return avgSpeed < 0.5 ? 0 : avgSpeed;
     }
-
-    // 画面上に速度を表示する
     function updateSpeedDisplay(speedKnots) {
-      // nullの場合でも0と表示（「計測中...」と表示しない）
       if (speedKnots === null) {
         speedDisplayElem.textContent = "0.0";
       } else {
-        // 速度表示（すでにスムージング済みの値を受け取る）
         speedDisplayElem.textContent = speedKnots.toFixed(1);
       }
-      
-      // マップ情報パネルも更新
       if (document.getElementById('mapCurrentSpeed')) {
         document.getElementById('mapCurrentSpeed').textContent = `速度: ${speedKnots ? speedKnots.toFixed(1) : "0.0"} ノット`;
       }
     }
-
     let isAudioInitialized = false;
-
-    // 指定された速度（ノット）を発話する
     function speakSpeed(speedKnots) {
-      // 速度が0または非常に小さい場合は「ゼロ」と発話
       const speedText = speedKnots < 0.1 
         ? "速度、ゼロ" 
         : "速度、" + speedKnots.toFixed(1);
-      
       const utterance = new SpeechSynthesisUtterance(speedText);
       utterance.lang = 'ja-JP';
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
-      
       if (selectedVoice) {
         utterance.voice = selectedVoice;
       }
-      
-      // 音声を再生
       window.speechSynthesis.speak(utterance);
-      
-      // 発話時刻を記録
       lastSpeechTime = Date.now();
-      
     }
-
-    // 初回のボタン押下で音声再生を許可
     function initializeAudio() {
       if (!isAudioInitialized) {
-        // 初回の音声再生を行い、フラグを設定
         speakSpeed(0);
         isAudioInitialized = true;
-        
-        // 定期的に音声を再生するタイマーを設定
         if (announceIntervalId) {
           clearInterval(announceIntervalId);
         }
-        
         if (intervalSeconds !== null) {
           announceIntervalId = setInterval(() => {
             if (currentPosition && lastAnnouncedPosition) {
@@ -793,11 +668,8 @@
               const speedKnots = convertToKnots(speedMps);
               const smoothedSpeed = getSmoothedSpeed(speedKnots);
               updateSpeedDisplay(smoothedSpeed);
-              
-              // スムージングされた速度がnullでない場合のみ発話
               if (smoothedSpeed !== null) {
                 speakSpeed(smoothedSpeed);
-                // 次回の計算用に現在の位置を記録
                 lastAnnouncedPosition = currentPosition;
               }
             }
@@ -805,88 +677,58 @@
         }
       }
     }
-
-    // 「ここ」ボタンのイベントリスナー
     document.getElementById('hereButton').addEventListener('click', () => {
       initializeAudio();
     });
-
-    // 速度表示部分のタップイベントを追加
     speedDisplayContainerElem.addEventListener('click', () => {
       initializeAudio();
-      
-      // 現在の速度を即座に読み上げる
       if (currentPosition && lastAnnouncedPosition) {
         let speedMps;
-        
         if (currentPosition.coords.speed !== null && currentPosition.coords.speed !== undefined) {
           speedMps = currentPosition.coords.speed;
         } else {
           speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
         }
-        
         const speedKnots = convertToKnots(speedMps);
         const smoothedSpeed = getSmoothedSpeed(speedKnots);
-        
-        // 前回の発話から7秒以上経過している場合のみ発話
         const now = Date.now();
         if (now - lastSpeechTime >= MIN_SPEECH_INTERVAL) {
           speakSpeed(smoothedSpeed);
         }
       }
     });
-
-    // 発表タイミングで、前回の位置からの平均速度を算出して発言
     function announceCurrentSpeed() {
       if (currentPosition && lastAnnouncedPosition) {
         let speedMps;
-        
-        // GeolocationCoordinates.speedプロパティを優先的に使用
         if (currentPosition.coords.speed !== null && currentPosition.coords.speed !== undefined) {
           speedMps = currentPosition.coords.speed;
         } else {
-          // 従来の方法でフォールバック
           speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
         }
-        
         const speedKnots = convertToKnots(speedMps);
-        // スムージングされた速度を計算
         const smoothedSpeed = getSmoothedSpeed(speedKnots);
-        // スムージングされた速度で表示と発話を行う
         updateSpeedDisplay(smoothedSpeed);
-        
-        // 次回の計算用に現在の位置を記録（発話の前に更新）
         if (currentPosition) {
           lastAnnouncedPosition = currentPosition;
         }
-        
-        // 前回の発話から7秒以内の場合はスキップ
         const now = Date.now();
-        if (now - lastSpeechTime < MIN_SPEECH_INTERVAL) {
-          // スキップ
-        } else {
+        if (now - lastSpeechTime >= MIN_SPEECH_INTERVAL) {
           speakSpeed(smoothedSpeed);
         }
       }
     }
-
-    // ローカルストレージから秒数を取得
     function loadIntervalFromStorage() {
       const savedInterval = localStorage.getItem('intervalSeconds');
       if (savedInterval && INTERVAL_VALUES.includes(savedInterval === "null" ? null : parseInt(savedInterval, 10))) {
         intervalSeconds = savedInterval === "null" ? null : parseInt(savedInterval, 10);
       } else {
-        intervalSeconds = 30; // デフォルトの30秒に設定
+        intervalSeconds = 30;
       }
       intervalDisplayElem.textContent = intervalSeconds === null ? "ミュート" : intervalSeconds + "s";
     }
-
-    // ローカルストレージに秒数を保存
     function saveIntervalToStorage() {
       localStorage.setItem('intervalSeconds', intervalSeconds);
     }
-
-    // ローカルストレージから保存した地点を取得
     function loadSavedLocationsFromStorage() {
       const savedLocationsData = localStorage.getItem('savedLocations');
       if (savedLocationsData) {
@@ -894,13 +736,9 @@
         updateSavedLocationsList();
       }
     }
-
-    // ローカルストレージに保存した地点を保存
     function saveLocationsToStorage() {
       localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
     }
-
-    // 間隔をトグルする関数
     function toggleInterval() {
       const currentInterval = parseInt(intervalDisplayElem.textContent, 10) || null;
       let nextIndex = 0;
@@ -910,18 +748,13 @@
           break;
         }
       }
-      
       intervalSeconds = INTERVAL_VALUES[nextIndex];
       intervalDisplayElem.textContent = intervalSeconds === null ? "ミュート" : intervalSeconds + "s";
       saveIntervalToStorage();
-      
-      // 既存のタイマーをクリア
       if (announceIntervalId) {
         clearInterval(announceIntervalId);
         announceIntervalId = null;
       }
-      
-      // 新しいインターバルでタイマーを再設定（ミュートでない場合のみ）
       if (intervalSeconds !== null && isAudioInitialized) {
         announceIntervalId = setInterval(() => {
           if (currentPosition && lastAnnouncedPosition) {
@@ -929,161 +762,116 @@
             const speedKnots = convertToKnots(speedMps);
             const smoothedSpeed = getSmoothedSpeed(speedKnots);
             updateSpeedDisplay(smoothedSpeed);
-            
-            // スムージングされた速度がnullでない場合のみ発話
             if (smoothedSpeed !== null) {
               speakSpeed(smoothedSpeed);
-              // 次回の計算用に現在の位置を記録
               lastAnnouncedPosition = currentPosition;
             }
           }
         }, intervalSeconds * 1000);
       }
     }
-
-    // 2点間の方位角を計算する関数（度数法）
-    function calculateBearing(lat1, lon1, lat2, lon2) {
-      const toRad = Math.PI / 180;
-      const y = Math.sin((lon2 - lon1) * toRad) * Math.cos(lat2 * toRad);
-      const x = Math.cos(lat1 * toRad) * Math.sin(lat2 * toRad) -
-                Math.sin(lat1 * toRad) * Math.cos(lat2 * toRad) * Math.cos((lon2 - lon1) * toRad);
-      let bearing = Math.atan2(y, x) * 180 / Math.PI;
-      bearing = (bearing + 360) % 360; // 0-360度に正規化
-      return bearing;
-    }
-
-    // 方位角を16方位の文字列に変換する関数
+    savedLocationsTitle.addEventListener('click', () => {
+      toggleDarkMode();
+    });
     function bearingToDirection(bearing) {
       const directions = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', 
                           '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西'];
       const index = Math.round(bearing / 22.5) % 16;
       return directions[index];
     }
-
-    // 現在地を保存する
     function saveCurrentLocation() {
       if (!currentPosition) return;
-      
-      const distance = 0; // 保存時点では自分の位置なので距離は0
-      
-      // 現在の時刻を取得
+      const distance = 0;
       const now = new Date();
       const timeString = now.toLocaleTimeString('ja-JP', {hour12: false});
       const timeMatch = timeString.match(/(\d+):(\d+):(\d+)/);
       let formattedTime = timeString;
-      
       if (timeMatch) {
         formattedTime = `<span class="latest-time-display">${timeMatch[1]}:${timeMatch[2]}</span> <span class="muted-seconds">${timeMatch[3]}s</span>`;
       }
-      
-      // 保存時点での表示用の情報を作成
       const displayInfo = {
         formattedTime: formattedTime,
         distance: `<span class="distance-display">0</span>m`,
         direction: `方位: <span class="direction-display">－</span>`
       };
-      
       const location = {
         latitude: currentPosition.coords.latitude,
         longitude: currentPosition.coords.longitude,
         timestamp: timeString,
-        time: now.getTime(), // ミリ秒単位のタイムスタンプを保存
+        time: now.getTime(),
         id: Date.now(),
-        savedDistance: distance,  // 保存時の距離を記録
-        displayInfo: displayInfo  // 保存時点での表示情報
+        savedDistance: distance,
+        displayInfo: displayInfo
       };
-      
-      // 最大5箇所まで保存（新しいものを先頭に追加）
       savedLocations.unshift(location);
       if (savedLocations.length > MAX_SAVED_LOCATIONS) {
         savedLocations.pop();
       }
-      
-      // 既存の保存地点がある場合、各地点から現在位置までの距離と方位を計算して更新
       for (let i = 1; i < savedLocations.length; i++) {
         const loc = savedLocations[i];
-        
-        // 距離を計算
         const distanceFromCurrent = haversineDistance(
           currentPosition.coords.latitude,
           currentPosition.coords.longitude,
           loc.latitude,
           loc.longitude
         );
-        
-        // 方位角と方位を計算
         const bearingFromCurrent = calculateBearing(
           loc.latitude,
           loc.longitude,
           currentPosition.coords.latitude,
           currentPosition.coords.longitude
         );
-        
-        // 距離が0mの場合は方位を「－」と表示
         const directionText = Math.round(distanceFromCurrent) === 0 ? "－" : 
                    `<span class="direction-text">${bearingToDirection(bearingFromCurrent)}</span> <span class="direction-display">${Math.round(bearingFromCurrent).toString().padStart(3, '0')}</span>`;
-        
-        // 保存された情報を更新
         loc.savedDistance = distanceFromCurrent;
         loc.savedBearing = bearingFromCurrent;
         loc.savedDirection = directionText;
-        
-        // 表示用の情報も更新
         loc.displayInfo = {
           formattedTime: loc.displayInfo ? loc.displayInfo.formattedTime : '',
           distance: `<span class="distance-display">${Math.round(distanceFromCurrent)}</span>m`,
           direction: `方位: <span class="direction-display">${directionText}</span>`
         };
       }
-      
       updateSavedLocationsList();
-      saveLocationsToStorage(); // 保存後にローカルストレージに保存
+      saveLocationsToStorage();
     }
-    
-    // 保存地点リストを更新
+    function calculateBearing(lat1, lon1, lat2, lon2) {
+      const toRad = Math.PI / 180;
+      const y = Math.sin((lon2 - lon1) * toRad) * Math.cos(lat2 * toRad);
+      const x = Math.cos(lat1 * toRad) * Math.sin(lat2 * toRad) -
+                Math.sin(lat1 * toRad) * Math.cos(lat2 * toRad) * Math.cos((lon2 - lon1) * toRad);
+      let bearing = Math.atan2(y, x) * 180 / Math.PI;
+      bearing = (bearing + 360) % 360;
+      return bearing;
+    }
     function updateSavedLocationsList() {
       savedLocationsListElem.innerHTML = '';
-      
       savedLocations.forEach((loc, index) => {
         let displayDistance;
         let bearing = '';
         let direction = '';
-        let timeDiff = '';
         let currentStats = '';
-        
         if (currentPosition) {
-          // インデックス0（最新の地点）の場合のみ現在位置からリアルタイムで距離・方位を計算
           if (index === 0) {
-            // 現在位置からの距離を計算
             displayDistance = haversineDistance(
               currentPosition.coords.latitude, 
               currentPosition.coords.longitude,
               loc.latitude, 
               loc.longitude
             );
-            
-            // 方位角と方位を計算
             bearing = calculateBearing(
               currentPosition.coords.latitude,
               currentPosition.coords.longitude,
               loc.latitude,
               loc.longitude
             );
-            
-            // 距離が0mの場合は方位を「－」と表示
             direction = Math.round(displayDistance) === 0 ? "－" : 
                        `<span class="direction-text">${bearingToDirection(bearing)}</span> <span class="direction-display">${Math.round(bearing).toString().padStart(3, '0')}</span>`;
-            
-            // 最新の記録のみ、現在位置との時間差と平均速度を計算
             const currentTime = new Date().getTime();
-            const timeElapsedCurrent = (currentTime - loc.time) / (1000 * 60); // 分単位
-            
+            const timeElapsedCurrent = (currentTime - loc.time) / (1000 * 60);
             if (timeElapsedCurrent > 0) {
-              // 現在位置と最新地点間の距離を使用
-              const currentSpeedMps = displayDistance / (timeElapsedCurrent * 60); // m/s
+              const currentSpeedMps = displayDistance / (timeElapsedCurrent * 60);
               const currentSpeedKnots = convertToKnots(currentSpeedMps);
-              
-              // 現在位置との情報を追加
               const totalMinutes = Math.floor(timeElapsedCurrent);
               const hours = Math.floor(totalMinutes / 60);
               const minutes = totalMinutes % 60;
@@ -1091,7 +879,6 @@
               currentStats = `<span class="minutes-value">${hours > 0 ? `${hours.toString().padStart(2, '0')}時間` : ''}${minutes.toString().padStart(2, '0')}分 ${seconds.toString().padStart(2, '0')}</span>s経過 - 平均: <span class="speed-value">${currentSpeedKnots.toFixed(1)}</span>ノット`;
             }
           } else {
-            // インデックス1以降（古い地点）の場合は保存された距離・方位を使用
             displayDistance = loc.savedDistance || 0;
             direction = loc.savedDirection || '';
           }
@@ -1099,20 +886,13 @@
           displayDistance = loc.savedDistance || 0;
           direction = loc.savedDirection || '';
         }
-        
         const item = document.createElement('div');
         item.className = 'location-item';
-        
-        // ゴミ箱アイコンを追加
         const deleteIcon = document.createElement('div');
         deleteIcon.className = 'delete-icon';
         deleteIcon.innerHTML = '🗑️';
         item.appendChild(deleteIcon);
-        
-        // スワイプ中かどうかを示すフラグ
         let isSwiping = false;
-        
-        // Hammer.jsでスワイプ処理を追加
         const hammer = new Hammer(item);
         hammer.on('panstart panmove panend', (ev) => {
           if (ev.type === 'panstart') {
@@ -1121,7 +901,6 @@
             const deltaX = Math.min(Math.max(ev.deltaX, 0), 400);
             item.style.transform = `translateX(${deltaX}px)`;
             item.classList.add('swiping');
-            
             if (deltaX > 100) {
               item.classList.add('will-delete');
             } else {
@@ -1130,126 +909,89 @@
           } else if (ev.type === 'panend') {
             item.classList.remove('swiping');
             if (ev.deltaX > 100) {
-              // 削除アニメーション
               item.style.transform = 'translateX(100%)';
               item.style.opacity = '0';
               setTimeout(() => {
-                // 配列から要素を削除
                 savedLocations.splice(index, 1);
                 saveLocationsToStorage();
                 updateSavedLocationsList();
               }, 300);
             } else {
-              // 元の位置に戻す
               item.style.transform = 'translateX(0)';
               item.classList.remove('will-delete');
             }
-            // スワイプ終了後、少し待ってからフラグをリセット
             setTimeout(() => {
               isSwiping = false;
             }, 100);
           }
         });
-        
-        // クリックイベントハンドラを修正
         item.addEventListener('click', () => {
-          // スワイプ中でない場合のみ地図を表示
           if (!isSwiping) {
             const location = savedLocations[index];
             showMap(location.latitude, location.longitude);
           }
         });
-        
         if (index === 0) {
           const currentStatsDiv = document.createElement('div');
           currentStatsDiv.className = 'location-stats';
           item.appendChild(currentStatsDiv);
-          
-          // リアルタイム更新のための関数
           function updateCurrentStats() {
             const currentTime = new Date().getTime();
-            const timeElapsedCurrent = (currentTime - loc.time) / (1000 * 60); // 分単位
-            
+            const timeElapsedCurrent = (currentTime - loc.time) / (1000 * 60);
             if (timeElapsedCurrent > 0) {
               const totalMinutes = Math.floor(timeElapsedCurrent);
               const hours = Math.floor(totalMinutes / 60);
               const minutes = totalMinutes % 60;
               const seconds = Math.round((timeElapsedCurrent - Math.floor(timeElapsedCurrent)) * 60);
-              
-              const currentSpeedMps = displayDistance / (timeElapsedCurrent * 60); // m/s
+              const currentSpeedMps = displayDistance / (timeElapsedCurrent * 60);
               const currentSpeedKnots = convertToKnots(currentSpeedMps);
-              
               currentStatsDiv.innerHTML = `<span class="minutes-value">${hours > 0 ? `${hours.toString().padStart(2, '0')}時間` : ''}${minutes.toString().padStart(2, '0')}分 ${seconds.toString().padStart(2, '0')}</span>s経過 - 平均: <span class="speed-value">${currentSpeedKnots.toFixed(1)}</span>ノット`;
             }
           }
-          
-          // 初回に表示を更新
           updateCurrentStats();
-          
-          // 1秒ごとに更新
           setInterval(updateCurrentStats, 1000);
         }
-        
-        // 基本情報（時刻、距離、方位）
         const timeMatch = loc.timestamp.match(/(\d+):(\d+):(\d+)/);
         let formattedTime;
-        
         if (timeMatch) {
           formattedTime = `<span class="time-display">${timeMatch[1]}:${timeMatch[2]}</span> <span class="time-display">${timeMatch[3]}</span>s`;
         } else {
           formattedTime = loc.timestamp || '不明';
         }
-        
         const basicInfoDiv = document.createElement('div');
-        
-        // 方位表示部分を修正
         let directionDisplay = direction;
         if (index > 0 && loc.savedDirection) {
           directionDisplay = `${loc.savedDirection}`;
         }
-        
         basicInfoDiv.innerHTML = `${formattedTime} - 距離: <span class="distance-display">${Math.round(displayDistance)}</span>m - 方位: <span class="direction-display">${directionDisplay}</span>`;
         item.appendChild(basicInfoDiv);
-        
-        // 区切り線を追加
         const separator = document.createElement('hr');
         item.appendChild(separator);
-                
-        // 前の地点との比較情報（2つ目以降の地点のみ）
         if (index < savedLocations.length - 1) {
           const prevLoc = savedLocations[index + 1];
-          const timeElapsed = (loc.time - prevLoc.time) / (1000 * 60); // 分単位
-          
+          const timeElapsed = (loc.time - prevLoc.time) / (1000 * 60);
           if (timeElapsed > 0) {
             const totalMinutes = Math.floor(timeElapsed);
             const hours = Math.floor(totalMinutes / 60);
             const minutes = totalMinutes % 60;
             const seconds = Math.round((timeElapsed - Math.floor(timeElapsed)) * 60);
-            
             const pointDistance = haversineDistance(
               loc.latitude, loc.longitude,
               prevLoc.latitude, prevLoc.longitude
             );
-            
-            const speedMps = pointDistance / (timeElapsed * 60); // m/s
+            const speedMps = pointDistance / (timeElapsed * 60);
             const speedKnots = convertToKnots(speedMps);
-            
             const prevStatsDiv = document.createElement('div');
             prevStatsDiv.className = 'location-stats';
             prevStatsDiv.innerHTML = `経過: <span class="minutes-value">${hours > 0 ? `${hours.toString().padStart(2, '0')}時間` : ''}${minutes.toString().padStart(2, '0')}分 ${seconds.toString().padStart(2, '0')}</span>s - 平均: <span class="speed-value">${speedKnots.toFixed(1)}</span>ノット`;
             item.appendChild(prevStatsDiv);
           }
         }
-
         savedLocationsListElem.appendChild(item);
       });
     }
-
-    // 位置情報の更新時に呼ばれる関数
     function handlePositionUpdate(pos) {
       currentPosition = pos;
-      
-      // レース情報が設定されている場合、Supabaseに送信を試みる
       if (raceUuid && racePassword) {
         if (navigator.onLine) {
           sendToSupabase(pos).catch(err => {
@@ -1262,24 +1004,17 @@
           saveOfflineQueue();
         }
       }
-
-      // 詳細な位置情報を5秒間隔で保存
       const now = Date.now();
       if (now - lastDetailedPositionTime >= DETAILED_POSITION_INTERVAL) {
         saveDetailedPosition(pos);
         lastDetailedPositionTime = now;
       }
-
       statusElem.innerHTML = 
                            "緯度: " + pos.coords.latitude.toFixed(5).padStart(9, '0') + "<br>" +
                            "経度: " + pos.coords.longitude.toFixed(5).padStart(9, '0');
-      
-      // 初回取得時にlastAnnouncedPositionを設定
       if (!lastAnnouncedPosition) {
         lastAnnouncedPosition = pos;
-        // 初回の速度計算と発話
         announceCurrentSpeed();
-        // 定期的な発話を開始
         if (intervalSeconds !== null) {
           if (announceIntervalId) {
             clearInterval(announceIntervalId);
@@ -1290,61 +1025,39 @@
               const speedKnots = convertToKnots(speedMps);
               const smoothedSpeed = getSmoothedSpeed(speedKnots);
               updateSpeedDisplay(smoothedSpeed);
-              
-              // スムージングされた速度がnullでない場合のみ発話
               if (smoothedSpeed !== null) {
                 speakSpeed(smoothedSpeed);
-                // 次回の計算用に現在の位置を記録
                 lastAnnouncedPosition = currentPosition;
               }
             }
           }, intervalSeconds * 1000);
         }
       }
-      
-      // リアルタイムで速度を更新
       if (lastAnnouncedPosition) {
         let speedMps;
-        
-        // GeolocationCoordinates.speedプロパティを優先的に使用
         if (pos.coords.speed !== null && pos.coords.speed !== undefined) {
           speedMps = pos.coords.speed;
         } else {
-          // 従来の方法でフォールバック
           speedMps = calculateSpeed(lastAnnouncedPosition, currentPosition);
         }
-        
         const speedKnots = convertToKnots(speedMps);
         const smoothedSpeed = getSmoothedSpeed(speedKnots);
         updateSpeedDisplay(smoothedSpeed);
       }
-      
-      // 保存地点があれば距離を更新
       if (savedLocations.length > 0) {
         updateSavedLocationsList();
       }
-      
-      // マップが表示されている場合は、マップも更新
       updateMapIfVisible();
     }
-
-    // イベントリスナーの設定
     intervalDisplayContainerElem.addEventListener('click', toggleInterval);
     hereButton.addEventListener('click', saveCurrentLocation);
-
-    // アプリ起動時に自動で開始
     function initialize() {
       statusElem.textContent = "位置情報取得中...";
-      
-      loadIntervalFromStorage(); // 秒数をロード
-      loadSavedLocationsFromStorage(); // 保存した地点をロード
-      loadOfflineQueue(); // オフラインキューをロード
-      getRaceInfoFromUrl(); // レース情報を取得
-
-      // オフラインキューの処理を試みる
+      loadIntervalFromStorage();
+      loadSavedLocationsFromStorage();
+      loadOfflineQueue();
+      getRaceInfoFromUrl();
       processOfflineQueue();
-
-      // 高精度で位置情報を取得（watchPositionで継続的に更新）
       watchId = navigator.geolocation.watchPosition(
         handlePositionUpdate,
         (err) => {
@@ -1357,62 +1070,39 @@
         }
       );
     }
-
-    // 保存した地点の履歴をクリアする
     function clearSavedLocations() {
       savedLocations = [];
       updateSavedLocationsList();
       saveLocationsToStorage();
     }
-    
-    // ダークモードの状態管理
     let isDarkMode = localStorage.getItem('darkMode') === 'true';
-    
-    // 初期状態の設定
     if (isDarkMode) {
       document.body.setAttribute('data-theme', 'dark');
     }
-
-    // ダークモード切り替え関数
     function toggleDarkMode() {
       isDarkMode = !isDarkMode;
       localStorage.setItem('darkMode', isDarkMode);
       document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
     }
-
-    // 「保存した地点」タイトルのクリックイベント
     savedLocationsTitle.addEventListener('click', () => {
       toggleDarkMode();
     });
-
-    // グローバルスコープでマップ関連の変数を定義
     let map = null;
     let mapModal = null;
     let mapElement = null;
     let isTrackingMode = false;
-    let currentMapMode = 'speed'; // speed, satellite
-    let speedSegments = []; // 速度データのセグメント
-    let speedPolylines = []; // 速度表示用のポリライン配列
-    let speedFilterMode = 'all'; // 速度フィルターモード: 'all', 'low', 'medium', 'high'
-
-    // マップ表示を切り替える関数
+    let currentMapMode = 'speed';
+    let speedSegments = [];
+    let speedPolylines = [];
+    let speedFilterMode = 'all';
     function switchMapMode() {
-      // 現在のモードを切り替える
       currentMapMode = currentMapMode === 'speed' ? 'satellite' : 'speed';
-      
-      // 速度凡例は常に表示（衛星モードでも表示）
-      // const speedLegend = document.getElementById('speedLegend');
-      // speedLegend.style.display = currentMapMode === 'speed' ? 'block' : 'none';
-      
       if (map) {
-        // 既存のタイルレイヤーを削除
         map.eachLayer(layer => {
           if (layer instanceof L.TileLayer) {
             map.removeLayer(layer);
           }
         });
-        
-        // 選択されたモードに基づいてタイルレイヤーを追加
         if (currentMapMode === 'satellite') {
           L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
@@ -1423,36 +1113,26 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           }).addTo(map);
         }
-        
-        // 速度表示の切替 - 衛星モードでも表示するように変更
         speedPolylines.forEach(polyline => {
           polyline.setStyle({
-            opacity: 0.8 // 常に表示
+            opacity: 0.8
           });
         });
-        
-        // 詳細な経路情報の表示/非表示 - 衛星モードでも表示するように変更
         map.eachLayer(layer => {
           if (layer._detailedPath) {
             layer.setStyle({
-              opacity: 0.8 // 常に表示
+              opacity: 0.8
             });
           }
         });
-        
-        // 詳細経路を更新 - 衛星モードでも更新するように変更
         updateDetailedPathOnMap();
       }
     }
-
-    // 追跡モードの切り替え
     function toggleTrackingMode() {
       isTrackingMode = !isTrackingMode;
-      
       const trackModeBtn = document.getElementById('trackModeBtn');
       if (isTrackingMode) {
         trackModeBtn.classList.add('active');
-        // 現在位置があれば、その位置にマップの中心を移動
         if (currentPosition && map) {
           map.setView([currentPosition.coords.latitude, currentPosition.coords.longitude], map.getZoom());
         }
@@ -1460,33 +1140,23 @@
         trackModeBtn.classList.remove('active');
       }
     }
-
-    // 速度に応じた色を取得する関数
     function getSpeedColor(speed) {
-      // 速度に応じた色を決定（0～10ノットを青→緑→赤のグラデーションで表現）
-      const cappedSpeed = Math.min(speed, 10); // 10ノット以上は同じ色に
+      const cappedSpeed = Math.min(speed, 10);
       const ratio = cappedSpeed / 10;
-      
-      // 青(0,0,255) → 緑(0,255,0) → 赤(255,0,0)のグラデーション
       let r, g, b;
       if (ratio < 0.5) {
-        // 青から緑へ
         const factor = ratio * 2;
         r = 0;
         g = Math.round(255 * factor);
         b = Math.round(255 * (1 - factor));
       } else {
-        // 緑から赤へ
         const factor = (ratio - 0.5) * 2;
         r = Math.round(255 * factor);
         g = Math.round(255 * (1 - factor));
         b = 0;
       }
-      
       return `rgb(${r}, ${g}, ${b})`;
     }
-
-    // 現在地を目立つアイコンで表示し、進行方向を示す関数
     function showMapWithEnhancedFeatures(lat, lng) {
       if (!mapModal) {
         mapModal = document.getElementById('mapModal');
@@ -1494,120 +1164,64 @@
       if (!mapElement) {
         mapElement = document.getElementById('map');
       }
-      
       mapModal.style.display = 'block';
-      
-      // 既存のマップがある場合は削除
       if (map) {
         map.remove();
         map = null;
       }
-      
-      // 新しいマップを作成
       map = L.map(mapElement).setView([lat, lng], 15);
-
-      // デフォルトタイルレイヤーを追加
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
-
-      // スケールコントロールを追加
       L.control.scale({
-        imperial: false,  // メートル法のみを表示
+        imperial: false,
         position: 'bottomright'
       }).addTo(map);
-
-      // 速度凡例の表示（初期表示時に確実に表示されるようにする）
       const speedLegend = document.getElementById('speedLegend');
       if (speedLegend) {
         speedLegend.style.display = 'block';
-        updateSpeedRangeOverlay(); // 速度範囲のオーバーレイを更新
+        updateSpeedRangeOverlay();
       }
-
-      // 現在位置のカスタムアイコン
       const currentPositionIcon = L.divIcon({
         className: 'current-position-icon',
         html: '<div style="background-color: #4285F4; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
         iconSize: [22, 22],
         iconAnchor: [11, 11]
       });
-
-      // 保存地点のカスタムアイコン
       const savedLocationIcon = L.divIcon({
         className: 'saved-location-icon',
         html: '<div style="background-color: #DB4437; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.5);"></div>',
         iconSize: [18, 18],
         iconAnchor: [9, 9]
       });
-
       const latlngs = [];
       speedSegments = [];
       speedPolylines = [];
-      
-      // 保存位置を追加
       savedLocations.forEach((location, index) => {
         latlngs.push([location.latitude, location.longitude]);
-        
-        // 速度データを収集（次の地点との平均速度）
         if (index < savedLocations.length - 1) {
           const nextLoc = savedLocations[index + 1];
           const distance = haversineDistance(
             location.latitude, location.longitude,
             nextLoc.latitude, nextLoc.longitude
           );
-          const timeDiff = (location.time - nextLoc.time) / 1000; // 秒
+          const timeDiff = (location.time - nextLoc.time) / 1000;
           const speed = timeDiff > 0 ? convertToKnots(distance / timeDiff) : 0;
-          
           speedSegments.push({
             start: [location.latitude, location.longitude],
             end: [nextLoc.latitude, nextLoc.longitude],
             speed: speed
           });
         }
-        
-        // マーカーとポップアップを追加
-        const marker = L.marker([location.latitude, location.longitude], { icon: savedLocationIcon }).addTo(map);
-        
-        // ポップアップの詳細情報を作成
-        let popupContent = `<div style="font-size: 14px;">
-          <strong>時刻:</strong> ${location.timestamp}<br>`;
-        
-        // 最新の地点（インデックス0）以外は、前の地点との比較情報を表示
-        if (index < savedLocations.length - 1) {
-          const prevLoc = savedLocations[index + 1];
-          const timeElapsed = (location.time - prevLoc.time) / (1000 * 60); // 分単位
-          
-          if (timeElapsed > 0) {
-            const pointDistance = haversineDistance(
-              location.latitude, location.longitude,
-              prevLoc.latitude, prevLoc.longitude
-            );
-            
-            const speedMps = pointDistance / (timeElapsed * 60); // m/s
-            const speedKnots = convertToKnots(speedMps);
-            
-            popupContent += `<strong>区間距離:</strong> ${Math.round(pointDistance)}m<br>
-            <strong>所要時間:</strong> ${Math.floor(timeElapsed)}分 ${Math.round((timeElapsed - Math.floor(timeElapsed)) * 60)}秒<br>
-            <strong>平均速度:</strong> ${speedKnots.toFixed(1)}ノット<br>`;
-          }
-        }
-        
-        popupContent += `</div>`;
-        marker.bindPopup(popupContent);
+        L.marker([location.latitude, location.longitude], { icon: savedLocationIcon }).addTo(map);
       });
-
-      // 現在位置を追加
       if (currentPosition) {
         const currentLat = currentPosition.coords.latitude;
         const currentLng = currentPosition.coords.longitude;
         latlngs.unshift([currentLat, currentLng]);
-        
-        // 進行方向を取得（heading）
         const heading = currentPosition.coords.heading;
         let headingIcon = currentPositionIcon;
-        
-        // 進行方向がある場合は矢印アイコンを使用
         if (heading !== null && heading !== undefined && !isNaN(heading)) {
           headingIcon = L.divIcon({
             className: 'heading-icon',
@@ -1618,129 +1232,32 @@
             iconAnchor: [11, 11]
           });
         }
-        
-        const marker = L.marker([currentLat, currentLng], { icon: headingIcon }).addTo(map);
-        
-        // 現在位置のポップアップ情報
-        const speed = currentPosition.coords.speed !== null ? 
-                     convertToKnots(currentPosition.coords.speed).toFixed(1) + "ノット" : 
-                     "不明";
-        
-        marker.bindPopup(`<div style="font-size: 14px;">
+        L.marker([currentLat, currentLng], { icon: headingIcon }).addTo(map).bindPopup(`<div style="font-size: 14px;">
           <strong>現在位置</strong><br>
-          <strong>速度:</strong> ${speed}<br>
+          <strong>速度:</strong> ${currentPosition.coords.speed !== null ? convertToKnots(currentPosition.coords.speed).toFixed(1) + "ノット" : "不明"}<br>
           <strong>緯度:</strong> ${currentLat.toFixed(6)}<br>
           <strong>経度:</strong> ${currentLng.toFixed(6)}<br>
           ${currentPosition.coords.altitude !== null ? `<strong>高度:</strong> ${Math.round(currentPosition.coords.altitude)}m<br>` : ''}
           ${heading !== null && !isNaN(heading) ? `<strong>方位:</strong> ${Math.round(heading)}°<br>` : ''}
         </div>`);
-        
-        // 情報パネルを更新
         updateMapInfoPanel();
       }
-
-      // 基本の経路線（グレー）
       L.polyline(latlngs, { color: '#666', weight: 3, opacity: 0.6 }).addTo(map);
-      
-      // 速度に基づいた色分け経路
       speedSegments.forEach(segment => {
         const color = getSpeedColor(segment.speed);
         const visible = isSpeedVisible(segment.speed);
-        
-        // 色付きの線を描画
         const polyline = L.polyline([segment.start, segment.end], { 
           color: color, 
           weight: 5, 
           opacity: visible ? 0.8 : 0,
           lineCap: 'round',
           lineJoin: 'round',
-          speed: segment.speed, // 速度情報を保存
-          timestamp: location.time // タイムスタンプを保存
+          speed: segment.speed,
+          timestamp: location.time
         }).addTo(map);
-        
-        // ポップアップを廃止し、クリックイベントを追加
-        polyline.on('click', function(e) {
-          // クリックした位置を取得
-          const clickLatLng = e.latlng;
-        
-        // 既存のマーカーを削除
-          if (speedMarker) {
-            map.removeLayer(speedMarker);
-          }
-          
-          // 既存のタイマーをクリア
-          if (speedMarkerTimer) {
-            clearTimeout(speedMarkerTimer);
-          }
-          
-          // 選択されたセグメントを保存
-          selectedSegment = {
-            speed: segment.speed,
-            timestamp: location.time,
-            latlng: clickLatLng
-          };
-          
-          // 速度表示マーカーを作成
-          const markerIcon = L.divIcon({
-            className: 'speed-marker',
-            html: `${segment.speed.toFixed(1)}`,
-            iconSize: [30, 30],
-            iconAnchor: [15, 15]
-          });
-          
-          // マーカーを追加
-          speedMarker = L.marker(clickLatLng, {
-            icon: markerIcon,
-            draggable: true // ドラッグ可能に設定
-          }).addTo(map);
-          
-          // ドラッグイベントを設定
-          speedMarker.on('drag', function(e) {
-            // 線上に沿ってドラッグするための処理
-            const closestPoint = L.LineUtil.closestPointOnSegment(
-              map.latLngToLayerPoint(e.latlng),
-              map.latLngToLayerPoint(L.latLng(segment.start[0], segment.start[1])),
-              map.latLngToLayerPoint(L.latLng(segment.end[0], segment.end[1]))
-            );
-            
-            // レイヤーポイントを緯度経度に変換
-            const closestLatLng = map.layerPointToLatLng(closestPoint);
-            
-            // マーカーの位置を更新
-            speedMarker.setLatLng(closestLatLng);
-            
-            // ドラッグ中はタイマーをリセット
-            if (speedMarkerTimer) {
-              clearTimeout(speedMarkerTimer);
-            }
-            speedMarkerTimer = setTimeout(clearSpeedMarker, SPEED_MARKER_TIMEOUT);
-          });
-          
-          // ドラッグ終了時の処理を追加
-          speedMarker.on('dragend', function(e) {
-            // 選択位置を更新
-            selectedSegment.latlng = speedMarker.getLatLng();
-            
-            // 情報パネルを更新
-            updateSelectedSegmentInfo();
-            
-            // ドラッグ終了時にタイマーをリセット
-            if (speedMarkerTimer) {
-              clearTimeout(speedMarkerTimer);
-            }
-            speedMarkerTimer = setTimeout(clearSpeedMarker, SPEED_MARKER_TIMEOUT);
-          });
-          
-          // 情報パネルを更新
-          updateSelectedSegmentInfo();
-          
-          // 30秒後に速度表示マークを消すタイマーを設定
-          speedMarkerTimer = setTimeout(clearSpeedMarker, SPEED_MARKER_TIMEOUT);
-        });
-        
+        // 経路クリック時の処理は削除（空のイベントハンドラ）
+        polyline.on('click', function(e) {});
         speedPolylines.push(polyline);
-        
-        // 選択した速度範囲の場合、アニメーションを適用
         if (speedFilterMode !== 'all' && visible) {
           setTimeout(() => {
             if (polyline._path) {
@@ -1749,109 +1266,48 @@
           }, 100);
         }
       });
-      
-      // 各セグメントに速度表示マーカーを追加
-      addSpeedMarkers();
-      
-      // 詳細な経路情報を表示
       updateDetailedPathOnMap();
-      
-      // マップが表示された後にinvalidateSizeを呼び出す
       setTimeout(() => {
         map.invalidateSize();
       }, 100);
-      
-      // イベントリスナーの設定
       setupMapEventListeners();
     }
-
-    // 情報パネルの更新
     function updateMapInfoPanel() {
-      // マップモーダルが存在しないか、表示されていない場合は処理をスキップ
       if (!mapModal || mapModal.style.display !== 'block') return;
-      
-      // 情報パネル要素が存在しない場合は処理をスキップ
       const speedElem = document.getElementById('mapSelectedSpeed');
       const timeElem = document.getElementById('mapSelectedTime');
       if (!speedElem || !timeElem) return;
-      
-      // 速度表示マークが表示されたときに速度を表示
-      if (selectedSegment) {
-        // 選択されたセグメントがある場合は、その情報を表示
-        speedElem.textContent = `選択: ${selectedSegment.speed.toFixed(1)} ノット`;
-        
-        // 時間情報を表示（何分前か）
-        const now = Date.now();
-        const diffMs = now - selectedSegment.timestamp;
-        const diffMinutes = Math.floor(diffMs / 60000);
-        
-        if (diffMinutes < 1) {
-          timeElem.textContent = `時間: たった今`;
-        } else {
-          timeElem.textContent = `時間: ${diffMinutes} 分前`;
-        }
-        
-        speedElem.style.display = 'block';
-        timeElem.style.display = 'block';
-      } else if (currentPosition && currentPosition.coords.speed !== null) {
-        // 選択されたセグメントがない場合は、現在の速度を表示
-        const speed = convertToKnots(currentPosition.coords.speed).toFixed(1);
-        speedElem.textContent = `現在: ${speed} ノット`;
-        timeElem.textContent = `時間: リアルタイム`;
-        
-        speedElem.style.display = 'block';
-        timeElem.style.display = 'block';
+      if (currentPosition && currentPosition.coords.speed !== null) {
+         const speed = convertToKnots(currentPosition.coords.speed).toFixed(1);
+         speedElem.textContent = `現在: ${speed} ノット`;
+         timeElem.textContent = `時間: リアルタイム`;
+         speedElem.style.display = 'block';
+         timeElem.style.display = 'block';
       } else {
-        // 速度情報がない場合
-        speedElem.textContent = `速度: -- ノット`;
-        timeElem.textContent = `時間: --`;
-        
-        speedElem.style.display = 'block';
-        timeElem.style.display = 'block';
+         speedElem.textContent = `速度: -- ノット`;
+         timeElem.textContent = `時間: --`;
+         speedElem.style.display = 'block';
+         timeElem.style.display = 'block';
       }
     }
-
-    // マップのイベントリスナーを設定
     function setupMapEventListeners() {
-      // マップ表示切替ボタンの代わりに情報パネルのクリックイベントを設定
       document.getElementById('mapInfoPanel').addEventListener('click', switchMapMode);
-      
-      // 追跡モードボタン
       document.getElementById('trackModeBtn').addEventListener('click', toggleTrackingMode);
-      
-      // 速度凡例のクリックイベント
       document.getElementById('speedLegend').addEventListener('click', toggleSpeedFilter);
-      
-      // マップ移動時に詳細経路を更新
       map.on('moveend', () => {
         updateDetailedPathOnMap();
       });
     }
-
-    // 位置情報更新時にマップを更新する関数
     function updateMapIfVisible() {
       if (mapModal && mapModal.style.display === 'block' && map && currentPosition) {
-        // 追跡モードがオンの場合、マップの中心を現在位置に移動
         if (isTrackingMode) {
           map.setView([currentPosition.coords.latitude, currentPosition.coords.longitude], map.getZoom());
         }
-        
-        // 情報パネルを更新
         updateMapInfoPanel();
-        
-        // 詳細な経路情報を更新 - 衛星モードでも更新するように変更
         updateDetailedPathOnMap();
-        
-        // 選択情報がある場合は更新
-        if (selectedSegment) {
-          updateSelectedSegmentInfo();
-        }
       }
     }
-
-    // 詳細な位置情報を保存する関数
     function saveDetailedPosition(pos) {
-      // 位置情報と時刻を保存
       const detailedPosition = {
         latitude: pos.coords.latitude,
         longitude: pos.coords.longitude,
@@ -1860,50 +1316,31 @@
         heading: pos.coords.heading,
         altitude: pos.coords.altitude
       };
-      
-      // 配列の先頭に追加
       detailedPositionHistory.unshift(detailedPosition);
-      
-      // 最大保持数を超えた場合、古いデータを削除
       if (detailedPositionHistory.length > MAX_DETAILED_POSITIONS) {
         detailedPositionHistory.pop();
       }
-      
-      // マップが表示されている場合は更新
       updateDetailedPathOnMap();
     }
-    
-    // マップ上に詳細な経路を表示する関数
     function updateDetailedPathOnMap() {
       if (!map || !mapModal || mapModal.style.display !== 'block' || detailedPositionHistory.length < 2) {
         return;
       }
-      
-      // 既存の詳細経路レイヤーを削除
       map.eachLayer(layer => {
         if (layer._detailedPath) {
           map.removeLayer(layer);
         }
       });
-      
-      // 詳細な位置情報から経路と速度セグメントを作成
       const detailedLatlngs = detailedPositionHistory.map(pos => [pos.latitude, pos.longitude]);
       const detailedSpeedSegments = [];
-      
       for (let i = 0; i < detailedPositionHistory.length - 1; i++) {
         const current = detailedPositionHistory[i];
         const next = detailedPositionHistory[i + 1];
-        
-        // 距離を計算
         const distance = haversineDistance(
           current.latitude, current.longitude,
           next.latitude, next.longitude
         );
-        
-        // 時間差を計算（秒）
         const timeDiff = (current.timestamp - next.timestamp) / 1000;
-        
-        // 速度を計算（ノット）
         let speed;
         if (current.speed !== null && current.speed !== undefined) {
           speed = convertToKnots(current.speed);
@@ -1912,7 +1349,6 @@
         } else {
           speed = 0;
         }
-        
         detailedSpeedSegments.push({
           start: [current.latitude, current.longitude],
           end: [next.latitude, next.longitude],
@@ -1921,106 +1357,23 @@
           time: timeDiff
         });
       }
-      
-      // 詳細な速度セグメントを地図に表示
       detailedSpeedSegments.forEach(segment => {
         const color = getSpeedColor(segment.speed);
         const visible = isSpeedVisible(segment.speed);
-        
-        // 色付きの線を描画 - 衛星モードでも表示するように変更
         const polyline = L.polyline([segment.start, segment.end], { 
           color: color, 
           weight: 4, 
-          opacity: visible ? 0.8 : 0, // フィルターに基づいて表示/非表示
+          opacity: visible ? 0.8 : 0,
           lineCap: 'round',
           lineJoin: 'round',
-          _detailedPath: true, // カスタムプロパティで識別
-          speed: segment.speed, // 速度情報を保存
-          time: segment.time, // 時間情報を保存
-          timestamp: current.timestamp // タイムスタンプを保存
+          _detailedPath: true,
+          speed: segment.speed,
+          time: segment.time,
+          timestamp: current.timestamp
         }).addTo(map);
-        
-        // ポップアップを廃止し、クリックイベントを追加
         polyline.on('click', function(e) {
-          // クリックした位置を取得
-          const clickLatLng = e.latlng;
-          
-          // 既存のマーカーを削除
-          if (speedMarker) {
-            map.removeLayer(speedMarker);
-          }
-          
-          // 既存のタイマーをクリア
-          if (speedMarkerTimer) {
-            clearTimeout(speedMarkerTimer);
-          }
-          
-          // 選択されたセグメントを保存
-          selectedSegment = {
-            speed: segment.speed,
-            timestamp: current.timestamp,
-            latlng: clickLatLng
-          };
-          
-          // 速度表示マーカーを作成
-          const markerIcon = L.divIcon({
-            className: 'speed-marker',
-            html: `${segment.speed.toFixed(1)}`,
-            iconSize: [30, 30],
-            iconAnchor: [15, 15]
-          });
-          
-          // マーカーを追加
-          speedMarker = L.marker(clickLatLng, {
-            icon: markerIcon,
-            draggable: true // ドラッグ可能に設定
-          }).addTo(map);
-          
-          // ドラッグイベントを設定
-          speedMarker.on('drag', function(e) {
-            // 線上に沿ってドラッグするための処理
-            const closestPoint = L.LineUtil.closestPointOnSegment(
-              map.latLngToLayerPoint(e.latlng),
-              map.latLngToLayerPoint(L.latLng(segment.start[0], segment.start[1])),
-              map.latLngToLayerPoint(L.latLng(segment.end[0], segment.end[1]))
-            );
-            
-            // レイヤーポイントを緯度経度に変換
-            const closestLatLng = map.layerPointToLatLng(closestPoint);
-            
-            // マーカーの位置を更新
-            speedMarker.setLatLng(closestLatLng);
-            
-            // ドラッグ中はタイマーをリセット
-            if (speedMarkerTimer) {
-              clearTimeout(speedMarkerTimer);
-            }
-            speedMarkerTimer = setTimeout(clearSpeedMarker, SPEED_MARKER_TIMEOUT);
-          });
-          
-          // ドラッグ終了時の処理を追加
-          speedMarker.on('dragend', function(e) {
-            // 選択位置を更新
-            selectedSegment.latlng = speedMarker.getLatLng();
-            
-            // 情報パネルを更新
-            updateSelectedSegmentInfo();
-            
-            // ドラッグ終了時にタイマーをリセット
-            if (speedMarkerTimer) {
-              clearTimeout(speedMarkerTimer);
-            }
-            speedMarkerTimer = setTimeout(clearSpeedMarker, SPEED_MARKER_TIMEOUT);
-          });
-          
-          // 情報パネルを更新
-          updateSelectedSegmentInfo();
-          
-          // 30秒後に速度表示マークを消すタイマーを設定
-          speedMarkerTimer = setTimeout(clearSpeedMarker, SPEED_MARKER_TIMEOUT);
+          // クリック時の円状マーカー生成処理は削除
         });
-        
-        // 選択した速度範囲の場合、アニメーションを適用
         if (speedFilterMode !== 'all' && visible) {
           setTimeout(() => {
             if (polyline._path) {
@@ -2030,208 +1383,7 @@
         }
       });
     }
-    
-    // 選択されたセグメントの情報をパネルに表示する関数
-    function updateSelectedSegmentInfo() {
-      if (!selectedSegment) return;
-      
-      // 速度情報を表示
-      const speedElem = document.getElementById('mapSelectedSpeed');
-      speedElem.textContent = `選択: ${selectedSegment.speed.toFixed(1)} ノット`;
-      speedElem.style.display = 'block';
-      
-      // 時間情報を表示（何分前か）
-      const timeElem = document.getElementById('mapSelectedTime');
-      const now = Date.now();
-      const diffMs = now - selectedSegment.timestamp;
-      const diffMinutes = Math.floor(diffMs / 60000);
-      
-      if (diffMinutes < 1) {
-        timeElem.textContent = `時間: たった今`;
-      } else {
-        timeElem.textContent = `時間: ${diffMinutes} 分前`;
-      }
-      timeElem.style.display = 'block';
-    }
-    
-    // 速度表示マークをクリアする関数
-    function clearSpeedMarker() {
-      // マップモーダルが存在しないか、表示されていない場合は処理をスキップ
-      if (!mapModal || mapModal.style.display !== 'block') return;
-      
-      if (map && speedMarker) {
-        map.removeLayer(speedMarker);
-        speedMarker = null;
-      }
-      
-      // 選択情報をクリア
-      selectedSegment = null;
-      
-      // 情報パネルを更新
-      updateMapInfoPanel();
-      
-      // 情報パネルの選択情報を非表示
-      const speedElem = document.getElementById('mapSelectedSpeed');
-      const timeElem = document.getElementById('mapSelectedTime');
-      if (speedElem) speedElem.style.display = 'none';
-      if (timeElem) timeElem.style.display = 'none';
-      
-      // タイマーをクリア
-      if (speedMarkerTimer) {
-        clearTimeout(speedMarkerTimer);
-        speedMarkerTimer = null;
-      }
-    }
-
-    // マップを表示する関数をグローバルスコープで定義
-    function showMap(lat, lng) {
-      // 拡張されたマップ表示関数を呼び出す
-      showMapWithEnhancedFeatures(lat, lng);
-    }
-
-    // マップを閉じる関数
-    function closeMap() {
-      if (mapModal) {
-        mapModal.style.display = 'none';
-      }
-      if (map) {
-        map.remove();
-        map = null;
-      }
-      
-      // 速度表示マークと選択情報をクリア
-      speedMarker = null;
-      selectedSegment = null;
-      
-      // 情報パネルの選択情報を非表示
-      const speedElem = document.getElementById('mapSelectedSpeed');
-      const timeElem = document.getElementById('mapSelectedTime');
-      if (speedElem) speedElem.style.display = 'none';
-      if (timeElem) timeElem.style.display = 'none';
-      
-      // タイマーをクリア
-      if (speedMarkerTimer) {
-        clearTimeout(speedMarkerTimer);
-        speedMarkerTimer = null;
-      }
-    }
-    // マップの初期化時に速度表示マーカーを追加
-    function addSpeedMarkers() {
-      speedSegments.forEach((segment, index) => {
-        const midLat = (segment.start[0] + segment.end[0]) / 2;
-        const midLng = (segment.start[1] + segment.end[1]) / 2;
-        const markerIcon = L.divIcon({
-          className: 'speed-marker',
-          html: `${segment.speed.toFixed(1)}`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 15]
-        });
-        
-        // 時間情報を取得（savedLocationsから）
-        let timestamp = Date.now();
-        if (savedLocations && savedLocations.length > index) {
-          timestamp = savedLocations[index].time;
-        }
-        
-        // マーカーを追加（ドラッグ可能に設定）
-        const marker = L.marker([midLat, midLng], {
-          icon: markerIcon,
-          draggable: true // ドラッグ可能に設定
-        }).addTo(map);
-        
-        // クリックイベントを追加
-        marker.on('click', function(e) {
-          // 選択されたセグメントを保存
-          selectedSegment = {
-            speed: segment.speed,
-            timestamp: timestamp,
-            latlng: marker.getLatLng()
-          };
-          
-          // 情報パネルを更新
-          updateMapInfoPanel();
-        });
-        
-        // ドラッグイベントを設定
-        marker.on('drag', function(e) {
-          // 線上に沿ってドラッグするための処理
-          const closestPoint = L.LineUtil.closestPointOnSegment(
-            map.latLngToLayerPoint(e.latlng),
-            map.latLngToLayerPoint(L.latLng(segment.start[0], segment.start[1])),
-            map.latLngToLayerPoint(L.latLng(segment.end[0], segment.end[1]))
-          );
-          
-          // レイヤーポイントを緯度経度に変換
-          const closestLatLng = map.layerPointToLatLng(closestPoint);
-          
-          // マーカーの位置を更新
-          marker.setLatLng(closestLatLng);
-          
-          // 選択されたセグメントの位置を更新
-          if (selectedSegment) {
-            selectedSegment.latlng = marker.getLatLng();
-            // 情報パネルを更新
-            updateMapInfoPanel();
-          }
-        });
-        
-        // ドラッグ終了時の処理を追加
-        marker.on('dragend', function(e) {
-          // 選択されたセグメントを保存
-          selectedSegment = {
-            speed: segment.speed,
-            timestamp: timestamp,
-            latlng: marker.getLatLng()
-          };
-          
-          // 情報パネルを更新
-          updateMapInfoPanel();
-        });
-      });
-    }
-
-    // マップを初期化する関数
-    function initMap() {
-      if (!mapModal) {
-        mapModal = document.getElementById('mapModal');
-      }
-      if (!mapElement) {
-        mapElement = document.getElementById('map');
-      }
-      const closeMapBtn = document.getElementById('closeMapBtn');
-      
-      closeMapBtn.addEventListener('click', closeMap);
-      
-      // 追跡モードボタンの初期設定
-      const trackModeBtn = document.getElementById('trackModeBtn');
-      if (trackModeBtn) {
-        trackModeBtn.classList.remove('active');
-        isTrackingMode = false;
-      }
-      
-      // マップモードの初期設定
-      currentMapMode = 'speed';
-      const toggleBtn = document.getElementById('toggleMapMode');
-      if (toggleBtn) {
-        toggleBtn.textContent = '速度';
-      }
-      
-      // 速度フィルターモードの初期設定
-      speedFilterMode = 'all';
-      const speedLegendMode = document.getElementById('speedLegendMode');
-      if (speedLegendMode) {
-        speedLegendMode.textContent = '速度 (ノット)';
-      }
-
-      // 速度表示マーカーを追加（マップとspeedSegmentsが準備できた後に実行）
-      if (map && speedSegments && speedSegments.length > 0) {
-        addSpeedMarkers();
-      }
-    }
-
-    // 速度フィルターを切り替える関数
     function toggleSpeedFilter() {
-      // 速度フィルターモードを切り替え
       switch (speedFilterMode) {
         case 'all':
           speedFilterMode = 'low';
@@ -2250,176 +1402,129 @@
           document.getElementById('speedLegendMode').textContent = '速度 (ノット)';
           break;
       }
-      
-      // 速度表示を更新
       updateSpeedDisplay();
-      
-      // 速度範囲のオーバーレイを更新
       updateSpeedRangeOverlay();
     }
-    
-    // 速度範囲のオーバーレイを更新する関数
     function updateSpeedRangeOverlay() {
       const gradientElement = document.querySelector('.speed-legend-gradient');
-      
-      // 既存のオーバーレイを削除
       const existingOverlays = document.querySelectorAll('.speed-range-overlay');
       existingOverlays.forEach(overlay => overlay.remove());
-      
-      // 全表示の場合はオーバーレイを表示しない
       if (speedFilterMode === 'all') {
         return;
       }
-      
-      // 速度範囲に応じたオーバーレイを作成（選択した範囲以外を覆う）
       const overlay1 = document.createElement('div');
       const overlay2 = document.createElement('div');
       overlay1.className = 'speed-range-overlay';
       overlay2.className = 'speed-range-overlay';
-      
-      const totalWidth = 150; // グラデーションの幅
-      
+      const totalWidth = 150;
       switch (speedFilterMode) {
         case 'low':
-          // 0-3ノット以外の部分を覆う (3-10+ノット)
           overlay1.style.left = `${3 / 10 * totalWidth}px`;
           overlay1.style.width = `${(10 - 3) / 10 * totalWidth}px`;
           gradientElement.appendChild(overlay1);
           break;
         case 'medium':
-          // 0-3ノットの部分を覆う
           overlay1.style.left = '0';
           overlay1.style.width = `${3 / 10 * totalWidth}px`;
-          // 6-10+ノットの部分を覆う
           overlay2.style.left = `${6 / 10 * totalWidth}px`;
           overlay2.style.width = `${(10 - 6) / 10 * totalWidth}px`;
           gradientElement.appendChild(overlay1);
           gradientElement.appendChild(overlay2);
           break;
         case 'high':
-          // 0-6ノットの部分を覆う
           overlay1.style.left = '0';
           overlay1.style.width = `${6 / 10 * totalWidth}px`;
           gradientElement.appendChild(overlay1);
           break;
       }
     }
-    
-    // 速度表示を更新する関数
     function updateSpeedDisplay() {
-      // マップが存在しない場合は処理をスキップ
       if (!map) {
         return;
       }
-
-      // 保存された経路の表示を更新
       if (speedPolylines && speedPolylines.length > 0) {
         speedPolylines.forEach(polyline => {
           const speed = polyline.options.speed;
           const visible = isSpeedVisible(speed);
-          const color = getSpeedColor(speed); // 常に速度に基づく色を使用
-          
+          const color = getSpeedColor(speed);
           if (speedFilterMode === 'all') {
-            // 全表示モードでは通常の不透明度で表示
             polyline.setStyle({
               opacity: 0.8,
               weight: 5,
               color: color
             });
-            // アニメーションを削除
-            polyline._path.classList.remove('animated-line');
-            // 強調表示用のクラスを削除
-            polyline._path.classList.remove('speed-highlighted-path');
-            // 通常の線用の影を追加
-            polyline._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
+            if (polyline._path) {
+              polyline._path.classList.remove('animated-line');
+              polyline._path.classList.remove('speed-highlighted-path');
+              polyline._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
+            }
           } else if (visible) {
-            // 選択した速度範囲は強調表示（アニメーション効果と影を適用）
             polyline.setStyle({
               opacity: 1.0,
               weight: 5,
               color: color
             });
-            // アニメーションクラスを追加
-            polyline._path.classList.add('animated-line');
-            // 影効果を追加（アニメーションと合わせて）
-            polyline._path.style.filter = 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.8))';
-            // 強調表示用のクラスを追加
-            polyline._path.classList.add('speed-highlighted-path');
+            if (polyline._path) {
+              polyline._path.classList.add('animated-line');
+              polyline._path.style.filter = 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.8))';
+              polyline._path.classList.add('speed-highlighted-path');
+            }
           } else {
-            // 選択していない速度範囲は通常表示（元の色を維持）
             polyline.setStyle({
-              opacity: 0.3, // 不透明度を下げて目立たなくする
+              opacity: 0.3,
               weight: 5,
               color: color
             });
-            // アニメーションを削除
-            polyline._path.classList.remove('animated-line');
-            // 強調表示用のクラスを削除
-            polyline._path.classList.remove('speed-highlighted-path');
-            // 通常の線用の影を追加
-            polyline._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
+            if (polyline._path) {
+              polyline._path.classList.remove('animated-line');
+              polyline._path.classList.remove('speed-highlighted-path');
+              polyline._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
+            }
           }
         });
       }
-      
-      // 詳細な経路情報の表示を更新
       map.eachLayer(layer => {
         if (layer._detailedPath) {
           const speed = layer.options.speed;
           const visible = isSpeedVisible(speed);
-          const color = getSpeedColor(speed); // 常に速度に基づく色を使用
-          
+          const color = getSpeedColor(speed);
           if (speedFilterMode === 'all') {
-            // 全表示モードでは通常の不透明度で表示
             layer.setStyle({
               opacity: 0.8,
               weight: 4,
               color: color
             });
-            // アニメーションを削除
             if (layer._path) {
               layer._path.classList.remove('animated-detailed-line');
-              // 強調表示用のクラスを削除
               layer._path.classList.remove('speed-highlighted-path');
-              // 通常の線用の影を追加
               layer._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
             }
           } else if (visible) {
-            // 選択した速度範囲は強調表示（アニメーション効果と影を適用）
             layer.setStyle({
               opacity: 1.0,
               weight: 4,
               color: color
             });
-            // アニメーションクラスを追加
             if (layer._path) {
               layer._path.classList.add('animated-detailed-line');
-              // 影効果を追加（アニメーションと合わせて）
               layer._path.style.filter = 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.8))';
-              // 強調表示用のクラスを追加
               layer._path.classList.add('speed-highlighted-path');
             }
           } else {
-            // 選択していない速度範囲は通常表示（元の色を維持）
             layer.setStyle({
-              opacity: 0.3, // 不透明度を下げて目立たなくする
+              opacity: 0.3,
               weight: 4,
               color: color
             });
-            // アニメーションを削除
             if (layer._path) {
               layer._path.classList.remove('animated-detailed-line');
-              // 強調表示用のクラスを削除
               layer._path.classList.remove('speed-highlighted-path');
-              // 通常の線用の影を追加
               layer._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
             }
           }
         }
       });
     }
-    
-    // 速度が現在のフィルターで表示すべきかを判定する関数
     function isSpeedVisible(speed) {
       switch (speedFilterMode) {
         case 'low':
@@ -2433,25 +1538,60 @@
           return true;
       }
     }
-
-    // ページ読み込み時に初期化
+    function initMap() {
+      if (!mapModal) {
+        mapModal = document.getElementById('mapModal');
+      }
+      if (!mapElement) {
+        mapElement = document.getElementById('map');
+      }
+      const closeMapBtn = document.getElementById('closeMapBtn');
+      closeMapBtn.addEventListener('click', closeMap);
+      const trackModeBtn = document.getElementById('trackModeBtn');
+      if (trackModeBtn) {
+        trackModeBtn.classList.remove('active');
+        isTrackingMode = false;
+      }
+      currentMapMode = 'speed';
+      const toggleBtn = document.getElementById('toggleMapMode');
+      if (toggleBtn) {
+        toggleBtn.textContent = '速度';
+      }
+      speedFilterMode = 'all';
+      const speedLegendMode = document.getElementById('speedLegendMode');
+      if (speedLegendMode) {
+        speedLegendMode.textContent = '速度 (ノット)';
+      }
+    }
+    function showMap(lat, lng) {
+      showMapWithEnhancedFeatures(lat, lng);
+    }
+    function closeMap() {
+      if (mapModal) {
+        mapModal.style.display = 'none';
+      }
+      if (map) {
+        map.remove();
+        map = null;
+      }
+      const speedElem = document.getElementById('mapSelectedSpeed');
+      const timeElem = document.getElementById('mapSelectedTime');
+      if (speedElem) speedElem.style.display = 'none';
+      if (timeElem) timeElem.style.display = 'none';
+    }
     document.addEventListener('DOMContentLoaded', () => {
       initialize();
-      initMap(); // マップの初期化
+      initMap();
     });
-
     document.getElementById('toggleMapMode').addEventListener('click', function() {
       if (currentMapMode === 'speed') {
         currentMapMode = 'satellite';
         this.textContent = '速度';
-        // 衛星モードに切り替える処理を追加
       } else {
         currentMapMode = 'speed';
         this.textContent = '衛星';
-        // 速度モードに切り替える処理を追加
       }
     });
   </script>
 </body>
 </html>
-
