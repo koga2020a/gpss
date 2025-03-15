@@ -419,8 +419,10 @@
     let lastDetailedPositionTime = 0;
     const MAX_DETAILED_POSITIONS = 100;
     
-    // ドラッグ可能マーカー（常に表示する）
+    // ドラッグ可能マーカー（常に表示）
     let selectedMarker = null;
+    // マーカーのみ移動可能モード（初期は通常モード）
+    let markerOnlyMode = false;
     
     // Supabase 初期化
     async function initializeSupabase() {
@@ -1037,7 +1039,7 @@
     let speedPolylines = [];
     let speedFilterMode = 'all';
     
-    // ▼ カスタムコントロール：地図切替ボタン
+    // ▼ カスタムコントロール：地図切替ボタン（従来の切替は残してありますが、map-info-panelではなく別ボタンで動作）
     L.Control.ToggleMapMode = L.Control.extend({
       onAdd: function(map) {
         const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
@@ -1121,19 +1123,27 @@
       }
       return `rgb(${r}, ${g}, ${b})`;
     }
-    // ▼ 情報パネル更新（クリックまたはドラッグ時）
-    function updateMapInfoPanelWithSpeed(speed) {
-      const speedElem = document.getElementById('mapSelectedSpeed');
-      const timeElem = document.getElementById('mapSelectedTime');
-      if (speedElem && timeElem) {
-        speedElem.textContent = `選択: ${speed.toFixed(1)} ノット`;
-        timeElem.textContent = `時間: --`;
-        speedElem.style.display = 'block';
-        timeElem.style.display = 'block';
+    // ▼ 情報パネルクリックで通常動作と「マーカーのみ移動可能」モードを切り替える
+    function toggleMarkerOnlyMode() {
+      markerOnlyMode = !markerOnlyMode;
+      if (markerOnlyMode) {
+        // マーカーのみ移動可能モード：マップのドラッグやズームを無効化
+        map.dragging.disable();
+        map.touchZoom.disable();
+        map.doubleClickZoom.disable();
+        map.scrollWheelZoom.disable();
+        // 情報パネルの背景色を変更するなど、モードの視認性を向上
+        document.getElementById('mapInfoPanel').style.backgroundColor = '#eee';
+      } else {
+        // 通常モードに戻す：マップの操作を有効化
+        map.dragging.enable();
+        map.touchZoom.enable();
+        map.doubleClickZoom.enable();
+        map.scrollWheelZoom.enable();
+        document.getElementById('mapInfoPanel').style.backgroundColor = '';
       }
     }
-    // ▼ ここから：マーカーの位置を経路に沿って制限するための処理
-    // p, v, wはそれぞれ{lat, lng}の形式のオブジェクトとする
+    // ▼ マーカーの位置を経路に沿ってスナップさせる処理
     function projectPoint(p, v, w) {
       const l2 = Math.pow(w.lat - v.lat, 2) + Math.pow(w.lng - v.lng, 2);
       if (l2 === 0) return v;
@@ -1144,20 +1154,16 @@
         lng: v.lng + t * (w.lng - v.lng)
       };
     }
-    // マーカーの現在位置から、すべての速度ポリライン上で最も近い線分上の位置（とそのセグメントの速度）を返す
     function snapToRoute(latlng) {
       let bestProjection = null;
       let bestSpeed = 0;
       let bestDistSq = Infinity;
-      // speedPolylinesは各セグメントのpolyline
       speedPolylines.forEach(polyline => {
         const pts = polyline.getLatLngs();
         if (pts.length < 2) return;
         const v = pts[0];
         const w = pts[1];
-        // プロジェクションを計算
         const proj = projectPoint(latlng, v, w);
-        // 単純な2次元距離（lat,lng単位）
         const dLat = latlng.lat - proj.lat;
         const dLng = latlng.lng - proj.lng;
         const distSq = dLat * dLat + dLng * dLng;
@@ -1169,8 +1175,6 @@
       });
       return { latlng: bestProjection || latlng, speed: bestSpeed };
     }
-    // ▼ マーカーをクリック時・ドラッグ時に移動させる処理
-    // 経路クリック時はすでに作成済みのselectedMarkerを移動させる
     function moveMarkerTo(latlng) {
       const snapped = snapToRoute(latlng);
       if (selectedMarker) {
@@ -1278,7 +1282,7 @@
           speed: segment.speed,
           timestamp: location.time
         }).addTo(map);
-        // 経路クリック時：既存のマーカーを移動（スナップ処理付き）
+        // 経路クリック時：マーカーをクリック位置に移動（スナップ付き）
         polyline.on('click', function(e) {
           moveMarkerTo(e.latlng);
         });
@@ -1297,7 +1301,7 @@
       }, 100);
       setupMapEventListeners();
       
-      // ▼ 初回表示時、マーカーが存在しなければ現在地（またはマップ中心）に作成
+      // ▼ 初回表示時、マーカーがなければ作成
       if (!selectedMarker) {
         const initPos = currentPosition ? 
                         [currentPosition.coords.latitude, currentPosition.coords.longitude] : map.getCenter();
@@ -1310,7 +1314,7 @@
             iconAnchor: [10, 10]
           })
         }).addTo(map);
-        // ドラッグ中は必ず経路上へスナップさせる
+        // ドラッグ時に常にスナップさせる
         selectedMarker.on('drag', function(e) {
           const snapped = snapToRoute(e.target.getLatLng());
           e.target.setLatLng(snapped.latlng);
@@ -1337,7 +1341,8 @@
       }
     }
     function setupMapEventListeners() {
-      document.getElementById('mapInfoPanel').addEventListener('click', switchMapMode);
+      // map-info-panel クリックで、 markerOnlyMode を切り替える
+      document.getElementById('mapInfoPanel').addEventListener('click', toggleMarkerOnlyMode);
       document.getElementById('trackModeBtn').addEventListener('click', toggleTrackingMode);
       document.getElementById('speedLegend').addEventListener('click', toggleSpeedFilter);
       map.on('moveend', () => {
@@ -1417,7 +1422,7 @@
           time: segment.time,
           timestamp: current.timestamp
         }).addTo(map);
-        // クリック時、既存のマーカーを移動
+        // クリック時にマーカーを移動
         polyline.on('click', function(e) {
           moveMarkerTo(e.latlng);
         });
