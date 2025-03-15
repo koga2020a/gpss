@@ -28,7 +28,6 @@
       --shadow-color: rgba(0,0,0,0.1);
       --muted-text-color: #666;
     }
-
     [data-theme="dark"] {
       --background-color: #1a1a1a;
       --container-background: #2d2d2d;
@@ -37,7 +36,6 @@
       --shadow-color: rgba(0, 0, 0, 0.3);
       --muted-text-color: #aaa;
     }
-
     body {
       font-family: sans-serif;
       margin: 20px;
@@ -53,14 +51,12 @@
       100% { stroke-width: 5px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
     }
     
-    /* 詳細経路のアニメーション効果 */
     @keyframes pulseDetailedLine {
       0% { stroke-width: 4px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
       50% { stroke-width: 8px; filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)); }
       100% { stroke-width: 4px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
     }
     
-    /* アニメーションを適用するクラス */
     .animated-line {
       animation: pulseLine 1.5s infinite ease-in-out;
       filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8));
@@ -110,12 +106,6 @@
       align-items: center;
       margin: 15px 0;
     }
-    .speed-btn {
-      width: 100%;
-      flex-shrink: 0;
-      background: #ffcc00;
-      color: #333;
-    }
     .speed-display {
       flex-grow: 1;
       text-align: center;
@@ -128,17 +118,6 @@
       align-items: center;
       justify-content: center;
       margin: 15px 0;
-    }
-    .speed-btn {
-      width: 30%;
-      flex-shrink: 0;
-      color: #333;
-    }
-    #decreaseInterval {
-      background: #ffcc00;
-    }
-    #increaseInterval {
-      background: #00bfff;
     }
     .interval-display {
       display: inline-flex;
@@ -412,18 +391,14 @@
       </div>
     </div>
     <p id="status">位置情報取得中...</p>
-    
     <div class="speed-container">
       <div class="speed-display" id="speedDisplayContainer"><span id="speedDisplay">0</span> ノット</div>
     </div>
-    
     <button id="hereButton" class="here-btn">ここ</button>
-    
     <div class="saved-locations">
       <h4 id="savedLocationsTitle">保存した地点</h4>
       <div id="savedLocationsList"></div>
     </div>
-    
   </div>
   
   <!-- マップ表示用のモーダルウィンドウ -->
@@ -431,12 +406,10 @@
     <div class="map-modal-content">
       <div id="map"></div>
       <div class="close-btn" id="closeMapBtn">×</div>
-      
-      <!-- マップ表示切替ボタン（非表示） -->
+      <!-- 従来の切替ボタンは非表示（カスタムコントロールにより切替） -->
       <div class="map-toggle-container">
         <button class="map-toggle-btn active" id="toggleMapMode">速度</button>
       </div>
-      
       <!-- 速度凡例 -->
       <div class="speed-legend" id="speedLegend">
         <div class="speed-legend-gradient"></div>
@@ -447,11 +420,9 @@
         </div>
         <div class="speed-legend-mode" id="speedLegendMode">速度 (ノット)</div>
       </div>
-      
       <!-- 追跡モードボタン -->
       <div class="track-mode-btn" id="trackModeBtn">📍</div>
-      
-      <!-- 情報パネル（クリックでマップモード切替） -->
+      <!-- 情報パネル -->
       <div class="map-info-panel" id="mapInfoPanel">
         <div class="map-info-data" id="mapSelectedSpeed" style="display: none;">選択: 0.0 ノット</div>
         <div class="map-info-data" id="mapSelectedTime" style="display: none;">時間: -- 分前</div>
@@ -460,7 +431,7 @@
   </div>
   
   <script>
-    // グローバル変数
+    // グローバル変数等（円状マーカー関連処理は削除済み）
     let watchId;
     let currentPosition = null;
     let lastAnnouncedPosition = null;
@@ -474,17 +445,15 @@
     let lastSpeechTime = 0;
     const MIN_SPEECH_INTERVAL = 7000;
     const INTERVAL_VALUES = [null, 10, 30, 50, 120, 240];
-
-    // 速度表示用詳細位置情報
     let detailedPositionHistory = [];
     const DETAILED_POSITION_INTERVAL = 5000;
     let lastDetailedPositionTime = 0;
     const MAX_DETAILED_POSITIONS = 100;
-
-    // Supabase初期化
+    
+    // Supabase 初期化
     async function initializeSupabase() {
       const SUPABASE_URL = 'https://ylsoibodesucxrxofuir.supabase.co';
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlsc29pYm9kZXN1Y3hyeG9mdWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE1MTA5MzAsImV4cCI6MjA1NzA4NjkzMH0.keB3IujuD-9-398opVDmChBETN0DhNy4u2iaQKdbGtU';
+      const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
       try {
         return supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       } catch (error) {
@@ -501,7 +470,7 @@
       }
     }
     setupSupabaseClient();
-
+    
     // レース情報
     let raceUuid = null;
     let racePassword = null;
@@ -509,7 +478,7 @@
     // オフラインキュー
     let offlineQueue = [];
     const OFFLINE_QUEUE_KEY = 'gpsOfflineQueue';
-
+    
     function getRaceInfoFromUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       raceUuid = urlParams.get('race');
@@ -570,7 +539,7 @@
       saveOfflineQueue();
     }
     window.addEventListener('online', processOfflineQueue);
-
+    
     const statusElem = document.getElementById('status');
     const speedDisplayElem = document.getElementById('speedDisplay');
     const speedDisplayContainerElem = document.getElementById('speedDisplayContainer');
@@ -579,7 +548,7 @@
     const hereButton = document.getElementById('hereButton');
     const savedLocationsListElem = document.getElementById('savedLocationsList');
     const savedLocationsTitle = document.getElementById('savedLocationsTitle');
-
+    
     // 日本語音声設定
     let selectedVoice = null;
     function setVoice() {
@@ -588,7 +557,7 @@
     }
     window.speechSynthesis.onvoiceschanged = setVoice;
     setVoice();
-
+    
     function haversineDistance(lat1, lon1, lat2, lon2) {
       const R = 6371000;
       const toRad = Math.PI / 180;
@@ -677,7 +646,7 @@
         }
       }
     }
-    document.getElementById('hereButton').addEventListener('click', () => {
+    hereButton.addEventListener('click', () => {
       initializeAudio();
     });
     speedDisplayContainerElem.addEventListener('click', () => {
@@ -1095,6 +1064,29 @@
     let speedSegments = [];
     let speedPolylines = [];
     let speedFilterMode = 'all';
+    
+    // ▼ カスタムコントロール：地図切替ボタン（Zoom Control の下に配置）
+    L.Control.ToggleMapMode = L.Control.extend({
+      onAdd: function(map) {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        const button = L.DomUtil.create('a', '', container);
+        button.innerHTML = '衛星';
+        button.href = '#';
+        button.title = '地図切り替え（速度/衛星）';
+        L.DomEvent.disableClickPropagation(button);
+        L.DomEvent.on(button, 'click', function(e) {
+          L.DomEvent.preventDefault(e);
+          switchMapMode();
+          button.innerHTML = (currentMapMode === 'satellite') ? '速度' : '衛星';
+        });
+        return container;
+      }
+    });
+    L.control.toggleMapMode = function(opts) {
+      return new L.Control.ToggleMapMode(opts);
+    };
+    // ▲ カスタムコントロール
+    
     function switchMapMode() {
       currentMapMode = currentMapMode === 'speed' ? 'satellite' : 'speed';
       if (map) {
@@ -1105,12 +1097,12 @@
         });
         if (currentMapMode === 'satellite') {
           L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            attribution: 'Tiles &copy; Esri'
           }).addTo(map);
         } else {
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '&copy; OpenStreetMap contributors'
           }).addTo(map);
         }
         speedPolylines.forEach(polyline => {
@@ -1169,15 +1161,18 @@
         map.remove();
         map = null;
       }
-      map = L.map(mapElement).setView([lat, lng], 15);
+      map = L.map(mapElement, { zoomControl: true }).setView([lat, lng], 15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
       L.control.scale({
         imperial: false,
         position: 'bottomright'
       }).addTo(map);
+      // ▼ 追加：カスタム地図切替コントロール（Zoom Control の下に配置）
+      L.control.toggleMapMode({ position: 'topleft' }).addTo(map);
+      // ▲
       const speedLegend = document.getElementById('speedLegend');
       if (speedLegend) {
         speedLegend.style.display = 'block';
@@ -1255,8 +1250,9 @@
           speed: segment.speed,
           timestamp: location.time
         }).addTo(map);
-        // 経路クリック時の処理は削除（空のイベントハンドラ）
-        polyline.on('click', function(e) {});
+        polyline.on('click', function(e) {
+          // 円状マーカー生成処理は削除
+        });
         speedPolylines.push(polyline);
         if (speedFilterMode !== 'all' && visible) {
           setTimeout(() => {
