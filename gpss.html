@@ -348,6 +348,24 @@
       height: 40px;
       overflow: hidden;
       width: 116px;
+      transition: box-shadow 0.3s ease;
+    }
+    .map-info-panel.marker-mode {
+      box-shadow: 0 0 8px rgba(255, 0, 0, 0.7);
+      animation: panelPulse 1.5s infinite ease-in-out;
+    }
+    @keyframes panelPulse {
+      0% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.7); }
+      50% { box-shadow: 0 0 12px rgba(255, 0, 0, 0.9); }
+      100% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.7); }
+    }
+    @keyframes markerPulse {
+      0% { border: 3px solid #000; box-shadow: 0 0 5px rgba(255, 0, 0, 0.7); }
+      50% { border: 3px solid #ff0000; box-shadow: 0 0 12px rgba(255, 0, 0, 0.9); }
+      100% { border: 3px solid #000; box-shadow: 0 0 5px rgba(255, 0, 0, 0.7); }
+    }
+    .marker-mode-active {
+      animation: markerPulse 1.5s infinite ease-in-out;
     }
     .map-info-data {
       margin: 4px 0;
@@ -1126,21 +1144,50 @@
     // ▼ 情報パネルクリックで通常動作と「マーカーのみ移動可能」モードを切り替える
     function toggleMarkerOnlyMode() {
       markerOnlyMode = !markerOnlyMode;
+      const mapInfoPanel = document.getElementById('mapInfoPanel');
+      
       if (markerOnlyMode) {
         // マーカーのみ移動可能モード：マップのドラッグやズームを無効化
         map.dragging.disable();
         map.touchZoom.disable();
         map.doubleClickZoom.disable();
         map.scrollWheelZoom.disable();
-        // 情報パネルの背景色を変更するなど、モードの視認性を向上
-        // document.getElementById('mapInfoPanel').style.backgroundColor = '#eee';
+        
+        // 情報パネルにクラスを追加してアニメーション
+        mapInfoPanel.classList.add('marker-mode');
+        
+        // マーカーのスタイルを更新
+        if (selectedMarker) {
+          const markerIcon = selectedMarker.getIcon();
+          const newIcon = L.divIcon({
+            className: 'custom-drag-marker',
+            html: '<div style="width:20px; height:20px; background:#ff0000; border-radius:50%; border:3px solid #000;" class="marker-mode-active"></div>',
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+          });
+          selectedMarker.setIcon(newIcon);
+        }
       } else {
         // 通常モードに戻す：マップの操作を有効化
         map.dragging.enable();
         map.touchZoom.enable();
         map.doubleClickZoom.enable();
         map.scrollWheelZoom.enable();
-        // document.getElementById('mapInfoPanel').style.backgroundColor = '';
+        
+        // 情報パネルからクラスを削除
+        mapInfoPanel.classList.remove('marker-mode');
+        
+        // マーカーのスタイルを元に戻す
+        if (selectedMarker) {
+          const markerIcon = selectedMarker.getIcon();
+          const newIcon = L.divIcon({
+            className: 'custom-drag-marker',
+            html: '<div style="width:20px; height:20px; background:#ff0000; border-radius:50%; border:3px solid #000;"></div>',
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+          });
+          selectedMarker.setIcon(newIcon);
+        }
       }
     }
     // ▼ マーカーの位置を経路に沿ってスナップさせる処理
@@ -1305,15 +1352,22 @@
       if (!selectedMarker) {
         const initPos = currentPosition ? 
                         [currentPosition.coords.latitude, currentPosition.coords.longitude] : map.getCenter();
+        
+        // マーカーモードに応じたHTMLを設定
+        const markerHtml = markerOnlyMode ? 
+          '<div style="width:20px; height:20px; background:#ff0000; border-radius:50%; border:3px solid #000;" class="marker-mode-active"></div>' :
+          '<div style="width:20px; height:20px; background:#ff0000; border-radius:50%; border:3px solid #000;"></div>';
+        
         selectedMarker = L.marker(initPos, {
           draggable: true,
           icon: L.divIcon({
             className: 'custom-drag-marker',
-            html: '<div style="width:20px; height:20px; background:#ff0000; border-radius:50%; border:3px solid #000;"></div>',
+            html: markerHtml,
             iconSize: [26, 26],
             iconAnchor: [13, 13]
           })
         }).addTo(map);
+        
         // ドラッグ時に常にスナップさせる
         selectedMarker.on('drag', function(e) {
           const snapped = snapToRoute(e.target.getLatLng());
