@@ -543,13 +543,74 @@
     
     // 日本語音声設定
     let selectedVoice = null;
+    const VOICE_STORAGE_KEY = 'selectedVoiceName';
+
     function setVoice() {
       const voices = speechSynthesis.getVoices();
-      selectedVoice = voices.find(voice => voice.lang.startsWith('ja')) || null;
+      const savedVoiceName = localStorage.getItem(VOICE_STORAGE_KEY);
+      if (savedVoiceName) {
+        selectedVoice = voices.find(voice => voice.name === savedVoiceName);
+      }
+      if (!selectedVoice) {
+        selectedVoice = voices.find(voice => voice.name.includes('sayaka')) ||
+                        voices.find(voice => voice.lang.startsWith('ja'));
+      }
+      updateVoiceDisplay();
     }
+
+    function updateVoiceDisplay() {
+      const voiceDisplay = document.getElementById('voiceDisplay');
+      if (voiceDisplay && selectedVoice) {
+        voiceDisplay.textContent = `声色：${selectedVoice.name}`;
+      }
+    }
+
+    function showVoiceSelection() {
+      const voices = speechSynthesis.getVoices().filter(voice => voice.lang.startsWith('ja') || voice.name.includes('jp'));
+      const voiceList = voices.map(voice => `<li>${voice.name}</li>`).join('');
+      const voicePopup = document.createElement('div');
+      voicePopup.innerHTML = `
+        <ul>${voiceList}</ul>
+        <button id="cancelButton" style="margin-top: 10px; background-color: #555; color: #fff; border: none; padding: 5px 10px; cursor: pointer;">キャンセル</button>
+      `;
+      voicePopup.style.position = 'fixed';
+      voicePopup.style.bottom = '10px';
+      voicePopup.style.right = '10px';
+      voicePopup.style.backgroundColor = '#333'; // 濃いグレー
+      voicePopup.style.color = '#fff'; // 白色文字
+      voicePopup.style.border = '1px solid #ccc';
+      voicePopup.style.padding = '10px';
+      voicePopup.style.zIndex = '1000';
+      document.body.appendChild(voicePopup);
+
+      voicePopup.querySelectorAll('li').forEach(item => {
+        item.addEventListener('click', () => {
+          const selectedName = item.textContent;
+          selectedVoice = voices.find(voice => voice.name === selectedName);
+          localStorage.setItem(VOICE_STORAGE_KEY, selectedName);
+          updateVoiceDisplay();
+          document.body.removeChild(voicePopup);
+        });
+      });
+
+      document.getElementById('cancelButton').addEventListener('click', () => {
+        document.body.removeChild(voicePopup);
+      });
+
+      // ポップアップ以外のクリックで閉じる
+      setTimeout(() => {
+        document.addEventListener('click', function handleOutsideClick(event) {
+          if (!voicePopup.contains(event.target)) {
+            document.body.removeChild(voicePopup);
+            document.removeEventListener('click', handleOutsideClick);
+          }
+        });
+      }, 0);
+    }
+
     window.speechSynthesis.onvoiceschanged = setVoice;
     setVoice();
-    
+
     function haversineDistance(lat1, lon1, lat2, lon2) {
       const R = 6371000;
       const toRad = Math.PI / 180;
@@ -1692,6 +1753,12 @@
     document.addEventListener('DOMContentLoaded', () => {
       initialize();
       initMap();
+      const voiceDisplay = document.createElement('div');
+      voiceDisplay.id = 'voiceDisplay';
+      voiceDisplay.style.cursor = 'pointer';
+      voiceDisplay.addEventListener('click', showVoiceSelection);
+      document.body.appendChild(voiceDisplay);
+      updateVoiceDisplay();
     });
     document.getElementById('toggleMapMode').addEventListener('click', function() {
       if (currentMapMode === 'speed') {
