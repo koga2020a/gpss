@@ -4,22 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GPS速度voiceアプリ</title>
-  <!-- Leaflet CSSを先に読み込む -->
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin=""/>
-  <!-- Leaflet JSを次に読み込む -->
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
-  <!-- Supabase Client の追加 -->
+  <!-- Supabase Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- ResponsiveVoice.jsを追加 -->
+  <!-- ResponsiveVoice.js -->
   <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_API_KEY"></script>
-  <!-- Hammer.jsを追加 -->
+  <!-- Hammer.js -->
   <script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
   <style>
-    /* シンプルで使いやすいモバイル向けスタイル */
     :root {
       --background-color: #f5f5f5;
       --container-background: #fff;
@@ -43,30 +42,24 @@
       color: var(--text-color);
       transition: background-color 0.3s ease, color 0.3s ease;
     }
-    
-    /* 線のアニメーション効果 */
     @keyframes pulseLine {
       0% { stroke-width: 5px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
       50% { stroke-width: 9px; filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)); }
       100% { stroke-width: 5px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
     }
-    
     @keyframes pulseDetailedLine {
       0% { stroke-width: 4px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
       50% { stroke-width: 8px; filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)); }
       100% { stroke-width: 4px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
     }
-    
     .animated-line {
       animation: pulseLine 1.5s infinite ease-in-out;
       filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8));
     }
-    
     .animated-detailed-line {
       animation: pulseDetailedLine 1.5s infinite ease-in-out;
       filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8));
     }
-    
     .container {
       max-width: 500px;
       margin: auto;
@@ -234,7 +227,7 @@
       border-bottom: 1px solid #eee;
       font-size: 0.9em;
     }
-    /* マップ表示用のモーダルウィンドウスタイル */
+    /* マップ表示用モーダル */
     .map-modal {
       display: none;
       position: fixed;
@@ -277,7 +270,7 @@
       cursor: pointer;
       z-index: 1001;
     }
-    /* 速度に基づいた色分け表示のための凡例 */
+    /* 速度凡例 */
     .speed-legend {
       position: absolute;
       bottom: 20px;
@@ -359,27 +352,6 @@
     .map-info-data {
       margin: 4px 0;
     }
-    .leaflet-interactive {
-      transition: filter 0.3s ease;
-    }
-    .speed-highlighted-path {
-      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9)) !important;
-      z-index: 1000 !important;
-    }
-    .map-toggle-btn {
-      background-color: var(--container-background);
-      border: none;
-      padding: 5px 10px;
-      cursor: pointer;
-      font-size: 14px;
-      color: var(--text-color);
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      margin-left: 5px;
-    }
-    .map-toggle-btn:hover {
-      background-color: rgba(0, 122, 255, 0.1);
-    }
   </style>
 </head>
 <body>
@@ -401,16 +373,14 @@
     </div>
   </div>
   
-  <!-- マップ表示用のモーダルウィンドウ -->
+  <!-- マップ表示用モーダル -->
   <div id="mapModal" class="map-modal">
     <div class="map-modal-content">
       <div id="map"></div>
       <div class="close-btn" id="closeMapBtn">×</div>
-      <!-- 従来の切替ボタンは非表示（カスタムコントロールにより切替） -->
       <div class="map-toggle-container">
         <button class="map-toggle-btn active" id="toggleMapMode">速度</button>
       </div>
-      <!-- 速度凡例 -->
       <div class="speed-legend" id="speedLegend">
         <div class="speed-legend-gradient"></div>
         <div class="speed-legend-labels">
@@ -420,7 +390,6 @@
         </div>
         <div class="speed-legend-mode" id="speedLegendMode">速度 (ノット)</div>
       </div>
-      <!-- 追跡モードボタン -->
       <div class="track-mode-btn" id="trackModeBtn">📍</div>
       <!-- 情報パネル -->
       <div class="map-info-panel" id="mapInfoPanel">
@@ -431,7 +400,7 @@
   </div>
   
   <script>
-    // グローバル変数等（円状マーカー関連処理は削除済み）
+    // グローバル変数
     let watchId;
     let currentPosition = null;
     let lastAnnouncedPosition = null;
@@ -449,6 +418,9 @@
     const DETAILED_POSITION_INTERVAL = 5000;
     let lastDetailedPositionTime = 0;
     const MAX_DETAILED_POSITIONS = 100;
+    
+    // ドラッグ可能マーカー（常に表示する）
+    let selectedMarker = null;
     
     // Supabase 初期化
     async function initializeSupabase() {
@@ -1065,7 +1037,7 @@
     let speedPolylines = [];
     let speedFilterMode = 'all';
     
-    // ▼ カスタムコントロール：地図切替ボタン（Zoom Control の下に配置）
+    // ▼ カスタムコントロール：地図切替ボタン
     L.Control.ToggleMapMode = L.Control.extend({
       onAdd: function(map) {
         const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
@@ -1149,6 +1121,64 @@
       }
       return `rgb(${r}, ${g}, ${b})`;
     }
+    // ▼ 情報パネル更新（クリックまたはドラッグ時）
+    function updateMapInfoPanelWithSpeed(speed) {
+      const speedElem = document.getElementById('mapSelectedSpeed');
+      const timeElem = document.getElementById('mapSelectedTime');
+      if (speedElem && timeElem) {
+        speedElem.textContent = `選択: ${speed.toFixed(1)} ノット`;
+        timeElem.textContent = `時間: --`;
+        speedElem.style.display = 'block';
+        timeElem.style.display = 'block';
+      }
+    }
+    // ▼ ここから：マーカーの位置を経路に沿って制限するための処理
+    // p, v, wはそれぞれ{lat, lng}の形式のオブジェクトとする
+    function projectPoint(p, v, w) {
+      const l2 = Math.pow(w.lat - v.lat, 2) + Math.pow(w.lng - v.lng, 2);
+      if (l2 === 0) return v;
+      let t = ((p.lat - v.lat) * (w.lat - v.lat) + (p.lng - v.lng) * (w.lng - v.lng)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return {
+        lat: v.lat + t * (w.lat - v.lat),
+        lng: v.lng + t * (w.lng - v.lng)
+      };
+    }
+    // マーカーの現在位置から、すべての速度ポリライン上で最も近い線分上の位置（とそのセグメントの速度）を返す
+    function snapToRoute(latlng) {
+      let bestProjection = null;
+      let bestSpeed = 0;
+      let bestDistSq = Infinity;
+      // speedPolylinesは各セグメントのpolyline
+      speedPolylines.forEach(polyline => {
+        const pts = polyline.getLatLngs();
+        if (pts.length < 2) return;
+        const v = pts[0];
+        const w = pts[1];
+        // プロジェクションを計算
+        const proj = projectPoint(latlng, v, w);
+        // 単純な2次元距離（lat,lng単位）
+        const dLat = latlng.lat - proj.lat;
+        const dLng = latlng.lng - proj.lng;
+        const distSq = dLat * dLat + dLng * dLng;
+        if (distSq < bestDistSq) {
+          bestDistSq = distSq;
+          bestProjection = proj;
+          bestSpeed = polyline.options.speed || 0;
+        }
+      });
+      return { latlng: bestProjection || latlng, speed: bestSpeed };
+    }
+    // ▼ マーカーをクリック時・ドラッグ時に移動させる処理
+    // 経路クリック時はすでに作成済みのselectedMarkerを移動させる
+    function moveMarkerTo(latlng) {
+      const snapped = snapToRoute(latlng);
+      if (selectedMarker) {
+        selectedMarker.setLatLng(snapped.latlng);
+      }
+      updateMapInfoPanelWithSpeed(snapped.speed);
+    }
+    // ▼ マップ表示処理
     function showMapWithEnhancedFeatures(lat, lng) {
       if (!mapModal) {
         mapModal = document.getElementById('mapModal');
@@ -1170,9 +1200,7 @@
         imperial: false,
         position: 'bottomright'
       }).addTo(map);
-      // ▼ 追加：カスタム地図切替コントロール（Zoom Control の下に配置）
       L.control.toggleMapMode({ position: 'topleft' }).addTo(map);
-      // ▲
       const speedLegend = document.getElementById('speedLegend');
       if (speedLegend) {
         speedLegend.style.display = 'block';
@@ -1250,8 +1278,9 @@
           speed: segment.speed,
           timestamp: location.time
         }).addTo(map);
+        // 経路クリック時：既存のマーカーを移動（スナップ処理付き）
         polyline.on('click', function(e) {
-          // 円状マーカー生成処理は削除
+          moveMarkerTo(e.latlng);
         });
         speedPolylines.push(polyline);
         if (speedFilterMode !== 'all' && visible) {
@@ -1267,6 +1296,27 @@
         map.invalidateSize();
       }, 100);
       setupMapEventListeners();
+      
+      // ▼ 初回表示時、マーカーが存在しなければ現在地（またはマップ中心）に作成
+      if (!selectedMarker) {
+        const initPos = currentPosition ? 
+                        [currentPosition.coords.latitude, currentPosition.coords.longitude] : map.getCenter();
+        selectedMarker = L.marker(initPos, {
+          draggable: true,
+          icon: L.divIcon({
+            className: 'custom-drag-marker',
+            html: '<div style="width:16px; height:16px; background:#ff0000; border-radius:50%; border:2px solid #fff;"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          })
+        }).addTo(map);
+        // ドラッグ中は必ず経路上へスナップさせる
+        selectedMarker.on('drag', function(e) {
+          const snapped = snapToRoute(e.target.getLatLng());
+          e.target.setLatLng(snapped.latlng);
+          updateMapInfoPanelWithSpeed(snapped.speed);
+        });
+      }
     }
     function updateMapInfoPanel() {
       if (!mapModal || mapModal.style.display !== 'block') return;
@@ -1367,8 +1417,9 @@
           time: segment.time,
           timestamp: current.timestamp
         }).addTo(map);
+        // クリック時、既存のマーカーを移動
         polyline.on('click', function(e) {
-          // クリック時の円状マーカー生成処理は削除
+          moveMarkerTo(e.latlng);
         });
         if (speedFilterMode !== 'all' && visible) {
           setTimeout(() => {
