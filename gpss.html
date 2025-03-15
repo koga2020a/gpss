@@ -1133,14 +1133,14 @@
         map.doubleClickZoom.disable();
         map.scrollWheelZoom.disable();
         // 情報パネルの背景色を変更するなど、モードの視認性を向上
-        document.getElementById('mapInfoPanel').style.backgroundColor = '#eee';
+        // document.getElementById('mapInfoPanel').style.backgroundColor = '#eee';
       } else {
         // 通常モードに戻す：マップの操作を有効化
         map.dragging.enable();
         map.touchZoom.enable();
         map.doubleClickZoom.enable();
         map.scrollWheelZoom.enable();
-        document.getElementById('mapInfoPanel').style.backgroundColor = '';
+        // document.getElementById('mapInfoPanel').style.backgroundColor = '';
       }
     }
     // ▼ マーカーの位置を経路に沿ってスナップさせる処理
