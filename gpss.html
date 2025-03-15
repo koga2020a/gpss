@@ -1329,10 +1329,12 @@
           speed: segment.speed,
           timestamp: location.time
         }).addTo(map);
+        
         // 経路クリック時：マーカーをクリック位置に移動（スナップ付き）
         polyline.on('click', function(e) {
           moveMarkerTo(e.latlng);
         });
+        
         speedPolylines.push(polyline);
         if (speedFilterMode !== 'all' && visible) {
           setTimeout(() => {
@@ -1476,10 +1478,12 @@
           time: segment.time,
           timestamp: current.timestamp
         }).addTo(map);
+        
         // クリック時にマーカーを移動
         polyline.on('click', function(e) {
           moveMarkerTo(e.latlng);
         });
+        
         if (speedFilterMode !== 'all' && visible) {
           setTimeout(() => {
             if (polyline._path) {
