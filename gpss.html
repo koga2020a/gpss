@@ -1750,6 +1750,9 @@
         }
       });
       
+      // 各セグメントに速度表示マーカーを追加
+      addSpeedMarkers();
+      
       // 詳細な経路情報を表示
       updateDetailedPathOnMap();
       
@@ -1764,16 +1767,47 @@
 
     // 情報パネルの更新
     function updateMapInfoPanel() {
-      if (!currentPosition || !document.getElementById('mapCurrentSpeed')) return;
+      // マップモーダルが存在しないか、表示されていない場合は処理をスキップ
+      if (!mapModal || mapModal.style.display !== 'block') return;
       
-      // 速度情報の初期表示を廃止
-      // 方位情報の初期表示を廃止
+      // 情報パネル要素が存在しない場合は処理をスキップ
+      const speedElem = document.getElementById('mapSelectedSpeed');
+      const timeElem = document.getElementById('mapSelectedTime');
+      if (!speedElem || !timeElem) return;
       
       // 速度表示マークが表示されたときに速度を表示
       if (selectedSegment) {
-        const speedElem = document.getElementById('mapSelectedSpeed');
+        // 選択されたセグメントがある場合は、その情報を表示
         speedElem.textContent = `選択: ${selectedSegment.speed.toFixed(1)} ノット`;
+        
+        // 時間情報を表示（何分前か）
+        const now = Date.now();
+        const diffMs = now - selectedSegment.timestamp;
+        const diffMinutes = Math.floor(diffMs / 60000);
+        
+        if (diffMinutes < 1) {
+          timeElem.textContent = `時間: たった今`;
+        } else {
+          timeElem.textContent = `時間: ${diffMinutes} 分前`;
+        }
+        
         speedElem.style.display = 'block';
+        timeElem.style.display = 'block';
+      } else if (currentPosition && currentPosition.coords.speed !== null) {
+        // 選択されたセグメントがない場合は、現在の速度を表示
+        const speed = convertToKnots(currentPosition.coords.speed).toFixed(1);
+        speedElem.textContent = `現在: ${speed} ノット`;
+        timeElem.textContent = `時間: リアルタイム`;
+        
+        speedElem.style.display = 'block';
+        timeElem.style.display = 'block';
+      } else {
+        // 速度情報がない場合
+        speedElem.textContent = `速度: -- ノット`;
+        timeElem.textContent = `時間: --`;
+        
+        speedElem.style.display = 'block';
+        timeElem.style.display = 'block';
       }
     }
 
@@ -2022,6 +2056,9 @@
     
     // 速度表示マークをクリアする関数
     function clearSpeedMarker() {
+      // マップモーダルが存在しないか、表示されていない場合は処理をスキップ
+      if (!mapModal || mapModal.style.display !== 'block') return;
+      
       if (map && speedMarker) {
         map.removeLayer(speedMarker);
         speedMarker = null;
@@ -2029,6 +2066,9 @@
       
       // 選択情報をクリア
       selectedSegment = null;
+      
+      // 情報パネルを更新
+      updateMapInfoPanel();
       
       // 情報パネルの選択情報を非表示
       const speedElem = document.getElementById('mapSelectedSpeed');
@@ -2075,6 +2115,80 @@
         speedMarkerTimer = null;
       }
     }
+    // マップの初期化時に速度表示マーカーを追加
+    function addSpeedMarkers() {
+      speedSegments.forEach((segment, index) => {
+        const midLat = (segment.start[0] + segment.end[0]) / 2;
+        const midLng = (segment.start[1] + segment.end[1]) / 2;
+        const markerIcon = L.divIcon({
+          className: 'speed-marker',
+          html: `${segment.speed.toFixed(1)}`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
+        
+        // 時間情報を取得（savedLocationsから）
+        let timestamp = Date.now();
+        if (savedLocations && savedLocations.length > index) {
+          timestamp = savedLocations[index].time;
+        }
+        
+        // マーカーを追加（ドラッグ可能に設定）
+        const marker = L.marker([midLat, midLng], {
+          icon: markerIcon,
+          draggable: true // ドラッグ可能に設定
+        }).addTo(map);
+        
+        // クリックイベントを追加
+        marker.on('click', function(e) {
+          // 選択されたセグメントを保存
+          selectedSegment = {
+            speed: segment.speed,
+            timestamp: timestamp,
+            latlng: marker.getLatLng()
+          };
+          
+          // 情報パネルを更新
+          updateMapInfoPanel();
+        });
+        
+        // ドラッグイベントを設定
+        marker.on('drag', function(e) {
+          // 線上に沿ってドラッグするための処理
+          const closestPoint = L.LineUtil.closestPointOnSegment(
+            map.latLngToLayerPoint(e.latlng),
+            map.latLngToLayerPoint(L.latLng(segment.start[0], segment.start[1])),
+            map.latLngToLayerPoint(L.latLng(segment.end[0], segment.end[1]))
+          );
+          
+          // レイヤーポイントを緯度経度に変換
+          const closestLatLng = map.layerPointToLatLng(closestPoint);
+          
+          // マーカーの位置を更新
+          marker.setLatLng(closestLatLng);
+          
+          // 選択されたセグメントの位置を更新
+          if (selectedSegment) {
+            selectedSegment.latlng = marker.getLatLng();
+            // 情報パネルを更新
+            updateMapInfoPanel();
+          }
+        });
+        
+        // ドラッグ終了時の処理を追加
+        marker.on('dragend', function(e) {
+          // 選択されたセグメントを保存
+          selectedSegment = {
+            speed: segment.speed,
+            timestamp: timestamp,
+            latlng: marker.getLatLng()
+          };
+          
+          // 情報パネルを更新
+          updateMapInfoPanel();
+        });
+      });
+    }
 
     // マップを初期化する関数
     function initMap() {
@@ -2107,6 +2221,11 @@
       const speedLegendMode = document.getElementById('speedLegendMode');
       if (speedLegendMode) {
         speedLegendMode.textContent = '速度 (ノット)';
+      }
+
+      // 速度表示マーカーを追加（マップとspeedSegmentsが準備できた後に実行）
+      if (map && speedSegments && speedSegments.length > 0) {
+        addSpeedMarkers();
       }
     }
 
@@ -2198,13 +2317,14 @@
         speedPolylines.forEach(polyline => {
           const speed = polyline.options.speed;
           const visible = isSpeedVisible(speed);
+          const color = getSpeedColor(speed); // 常に速度に基づく色を使用
           
           if (speedFilterMode === 'all') {
             // 全表示モードでは通常の不透明度で表示
             polyline.setStyle({
               opacity: 0.8,
               weight: 5,
-              color: getSpeedColor(speed) // 元の色を使用
+              color: color
             });
             // アニメーションを削除
             polyline._path.classList.remove('animated-line');
@@ -2216,8 +2336,8 @@
             // 選択した速度範囲は強調表示（アニメーション効果と影を適用）
             polyline.setStyle({
               opacity: 1.0,
-              weight: 5, // アニメーションで変化するため基本値は通常と同じに
-              color: getSpeedColor(speed) // 元の色を使用
+              weight: 5,
+              color: color
             });
             // アニメーションクラスを追加
             polyline._path.classList.add('animated-line');
@@ -2226,18 +2346,18 @@
             // 強調表示用のクラスを追加
             polyline._path.classList.add('speed-highlighted-path');
           } else {
-            // 選択していない速度範囲は白色で表示
+            // 選択していない速度範囲は通常表示（元の色を維持）
             polyline.setStyle({
-              opacity: 0.8,
+              opacity: 0.3, // 不透明度を下げて目立たなくする
               weight: 5,
-              color: '#ffffff' // 白色に変更
+              color: color
             });
             // アニメーションを削除
             polyline._path.classList.remove('animated-line');
             // 強調表示用のクラスを削除
             polyline._path.classList.remove('speed-highlighted-path');
-            // 白い線用の影を追加（黒い影で白い線を目立たせる）
-            polyline._path.style.filter = 'drop-shadow(0 0 2px rgba(0, 0, 0, 0.7))';
+            // 通常の線用の影を追加
+            polyline._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
           }
         });
       }
@@ -2247,13 +2367,14 @@
         if (layer._detailedPath) {
           const speed = layer.options.speed;
           const visible = isSpeedVisible(speed);
+          const color = getSpeedColor(speed); // 常に速度に基づく色を使用
           
           if (speedFilterMode === 'all') {
             // 全表示モードでは通常の不透明度で表示
             layer.setStyle({
               opacity: 0.8,
               weight: 4,
-              color: getSpeedColor(speed) // 元の色を使用
+              color: color
             });
             // アニメーションを削除
             if (layer._path) {
@@ -2267,8 +2388,8 @@
             // 選択した速度範囲は強調表示（アニメーション効果と影を適用）
             layer.setStyle({
               opacity: 1.0,
-              weight: 4, // アニメーションで変化するため基本値は通常と同じに
-              color: getSpeedColor(speed) // 元の色を使用
+              weight: 4,
+              color: color
             });
             // アニメーションクラスを追加
             if (layer._path) {
@@ -2279,19 +2400,19 @@
               layer._path.classList.add('speed-highlighted-path');
             }
           } else {
-            // 選択していない速度範囲は白色で表示
+            // 選択していない速度範囲は通常表示（元の色を維持）
             layer.setStyle({
-              opacity: 0.8,
+              opacity: 0.3, // 不透明度を下げて目立たなくする
               weight: 4,
-              color: '#ffffff' // 白色に変更
+              color: color
             });
             // アニメーションを削除
             if (layer._path) {
               layer._path.classList.remove('animated-detailed-line');
               // 強調表示用のクラスを削除
               layer._path.classList.remove('speed-highlighted-path');
-              // 白い線用の影を追加（黒い影で白い線を目立たせる）
-              layer._path.style.filter = 'drop-shadow(0 0 2px rgba(0, 0, 0, 0.7))';
+              // 通常の線用の影を追加
+              layer._path.style.filter = 'drop-shadow(0 0 1px rgba(0, 0, 0, 0.5))';
             }
           }
         }
@@ -2333,3 +2454,4 @@
   </script>
 </body>
 </html>
+
